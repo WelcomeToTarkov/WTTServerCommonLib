@@ -3,12 +3,14 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class HideoutPosterHelper(ISptLogger<HideoutPosterHelper> logger)
+public class HideoutPosterHelper(ISptLogger<HideoutPosterHelper> logger, DatabaseService databaseService)
 {
     private const string CustomizationItem = "673c7b00cbf4b984b5099181";
 
@@ -22,11 +24,12 @@ public class HideoutPosterHelper(ISptLogger<HideoutPosterHelper> logger)
         "Poster_Gym_5", "Poster_Gym_6", "Poster_Security_3", "Poster_ShootingRange_2"
     ];
 
-    public void AddToPosterSlot(string itemId, DatabaseTables database)
+    public void AddToPosterSlot(string itemId)
     {
+        var items = databaseService.GetItems();
         foreach (var posterSlotId in PosterSlotIds)
         {
-            if (!database.Templates.Items.TryGetValue(CustomizationItem, out var posterParent) || posterParent.Properties?.Slots == null)
+            if (!items.TryGetValue(CustomizationItem, out var posterParent) || posterParent.Properties?.Slots == null)
                 continue;
 
             AddItemToPosterSlots(itemId, posterParent, posterSlotId);

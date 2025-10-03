@@ -1,14 +1,15 @@
 ﻿using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class SpecialSlotsHelper(ISptLogger<SpecialSlotsHelper> logger)
+public class SpecialSlotsHelper(ISptLogger<SpecialSlotsHelper> logger, DatabaseService databaseService)
 {
-    public void AddToSpecialSlots(CustomItemConfig itemConfig, string itemId, DatabaseTables database)
+    public void AddToSpecialSlots(CustomItemConfig itemConfig, string itemId)
     {
         if (itemConfig.AddToSpecialSlots != true)
         {
@@ -21,9 +22,10 @@ public class SpecialSlotsHelper(ISptLogger<SpecialSlotsHelper> logger)
             "65e080be269cbd5c5005e529"  // unheard pockets
         };
 
+        var items = databaseService.GetItems();
         foreach (var pocketsId in pocketIds)
         {
-            if (!database.Templates.Items.TryGetValue(pocketsId, out var pockets))
+            if (!items.TryGetValue(pocketsId, out var pockets))
             {
                 logger.Warning( $"[SpecialSlots] Could not find pockets template with id {pocketsId}");
                 continue;

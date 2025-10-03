@@ -1,18 +1,14 @@
 ﻿using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common;
-using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Services;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class MasteryHelper(ISptLogger<MasteryHelper> logger)
+public class MasteryHelper(ISptLogger<MasteryHelper> logger, DatabaseService databaseService)
 {
-    public void AddOrUpdateMasteries(
-        IEnumerable<Mastering> masterySections,
-        string itemId,
-        DatabaseTables database
-        )
+    public void AddOrUpdateMasteries(IEnumerable<Mastering> masterySections, string itemId)
     {
         var masteries = masterySections.ToList();
         if (!masteries.Any())
@@ -21,6 +17,7 @@ public class MasteryHelper(ISptLogger<MasteryHelper> logger)
             return;
         }
 
+        var globals = databaseService.GetGlobals();
         foreach (var mastery in masteries)
         {
             if (string.IsNullOrEmpty(mastery.Name))
@@ -29,7 +26,7 @@ public class MasteryHelper(ISptLogger<MasteryHelper> logger)
                 continue;
             }
 
-            var existing = database.Globals.Configuration.Mastering
+            var existing = globals.Configuration.Mastering
                 .FirstOrDefault(m => m.Name.Equals(mastery.Name, StringComparison.OrdinalIgnoreCase));
 
             if (existing != null)
@@ -64,9 +61,9 @@ public class MasteryHelper(ISptLogger<MasteryHelper> logger)
                     Templates = mastery.Templates.ToArray()
                 };
 
-                var newMastering = database.Globals.Configuration.Mastering.ToList();
+                var newMastering = globals.Configuration.Mastering.ToList();
                 newMastering.Add(newMastery);
-                database.Globals.Configuration.Mastering = newMastering.ToArray();
+                globals.Configuration.Mastering = newMastering.ToArray();
 
                 //Log.Info( $"[Mastery] Created new mastery '{mastery.Name}' for {itemId}");
             }

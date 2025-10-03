@@ -3,16 +3,17 @@ using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class WeaponPresetHelper(ISptLogger<WeaponPresetHelper> logger)
+public class WeaponPresetHelper(ISptLogger<WeaponPresetHelper> logger, DatabaseService databaseService)
 {
-    public void ProcessWeaponPresets(CustomItemConfig itemConfig, string itemId, DatabaseTables tables)
+    public void ProcessWeaponPresets(CustomItemConfig itemConfig, string itemId)
     {
-        var globals = tables.Globals;
+        var globals = databaseService.GetGlobals();
 
         var itemPresets = globals.ItemPresets;
 

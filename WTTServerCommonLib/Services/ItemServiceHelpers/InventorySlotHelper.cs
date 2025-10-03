@@ -1,23 +1,23 @@
 ﻿using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger)
+public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger, DatabaseService databaseService)
 {
-    public void ProcessInventorySlots(
-        CustomItemConfig itemConfig,
-        string itemId,
-        DatabaseTables database)
+    public void ProcessInventorySlots(CustomItemConfig itemConfig, string itemId)
     {
         if (itemConfig.AddToInventorySlots == null)
             return;
 
         const string pmcInventoryTemplateId = "55d7217a4bdc2d86028b456d";
-        var defaultInventorySlots = database.Templates.Items[pmcInventoryTemplateId].Properties?.Slots;
+        
+        var items = databaseService.GetItems();
+        var defaultInventorySlots = items[pmcInventoryTemplateId].Properties?.Slots;
         if (defaultInventorySlots == null)
             return;
 

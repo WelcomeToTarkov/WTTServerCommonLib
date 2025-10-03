@@ -3,13 +3,15 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
 using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger)
+public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, DatabaseService databaseService)
 {
     private static readonly string[] ValidTypes = ["dogtag", "smallTrophies", "bigTrophies"];
     private static readonly string[] HallItemIds =
@@ -19,7 +21,7 @@ public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger)
         "6542435ea57eea37ed6562f0"  // Level 3
     ];
 
-    public void AddToHallOfFame(CustomItemConfig itemConfig, string itemId, DatabaseTables database)
+    public void AddToHallOfFame(CustomItemConfig itemConfig, string itemId)
     {
         var filterTypes = GetValidFilterTypes(itemConfig);
         if (filterTypes.Count == 0)
@@ -28,9 +30,10 @@ public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger)
             return;
         }
 
+        var items = databaseService.GetItems();
         foreach (var hallId in HallItemIds)
         {
-            if (!database.Templates.Items.TryGetValue(hallId, out var hallItem) || hallItem.Properties?.Slots == null)
+            if (!items.TryGetValue(hallId, out var hallItem) || hallItem.Properties?.Slots == null)
                 continue;
 
             AddItemToHallSlots(itemId, hallItem, filterTypes);

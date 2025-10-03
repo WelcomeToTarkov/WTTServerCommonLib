@@ -159,25 +159,25 @@ public class WTTCustomItemServiceExtended(
             return;
         }
         if (config is { AddToTraders: true, Traders: not null })
-            traderItemHelper.AddItem(config, newItemId, _database);
+            traderItemHelper.AddItem(config, newItemId);
 
         if (config.AddWeaponPreset == true)
-            weaponPresetHelper.ProcessWeaponPresets(config, newItemId, _database);
+            weaponPresetHelper.ProcessWeaponPresets(config, newItemId);
 
         if (config is { Masteries: true, MasterySections: not null })
-            masteryHelper.AddOrUpdateMasteries(config.MasterySections, newItemId, _database);
+            masteryHelper.AddOrUpdateMasteries(config.MasterySections, newItemId);
 
         if (config.AddToModSlots == true)
             AddDeferredModSlot(newItemId, config);
 
         if (config.AddToInventorySlots != null)
-            inventorySlotHelper.ProcessInventorySlots(config, newItemId, _database);
+            inventorySlotHelper.ProcessInventorySlots(config, newItemId);
 
         if (config.AddToHallOfFame == true)
-            hallOfFameHelper.AddToHallOfFame(config, newItemId, _database);
+            hallOfFameHelper.AddToHallOfFame(config, newItemId);
 
         if (config.AddToSpecialSlots == true)
-            specialSlotsHelper.AddToSpecialSlots(config, newItemId, _database);
+            specialSlotsHelper.AddToSpecialSlots(config, newItemId);
 
         if (config is { AddToStaticLootContainers: true, StaticLootContainers: not null })
             staticLootHelper.ProcessStaticLootContainers(config, newItemId);
@@ -188,16 +188,16 @@ public class WTTCustomItemServiceExtended(
         }
         
         if (config is { AddToGeneratorAsFuel: true, GeneratorFuelSlotStages: not null })
-            generatorFuelHelper.AddGeneratorFuel(config, newItemId, _database);
+            generatorFuelHelper.AddGeneratorFuel(config, newItemId);
         
         if (config.AddToHideoutPosterSlots == true)
-            hideoutPosterHelper.AddToPosterSlot(newItemId, _database);
+            hideoutPosterHelper.AddToPosterSlot(newItemId);
 
         if (config is { AddPosterToMaps: true, PosterSpawnProbability: not null })
             posterLootHelper.ProcessPosterLoot(config, newItemId);
 
         if (config.AddToStatuetteSlots == true)
-            hideoutStatuetteHelper.AddToStatuetteSlot(newItemId, _database);
+            hideoutStatuetteHelper.AddToStatuetteSlot(newItemId);
     }
     private void AddDeferredModSlot(string newItemId, CustomItemConfig config)
     {
@@ -226,7 +226,7 @@ public class WTTCustomItemServiceExtended(
                 {
                     return;
                 }
-                modSlotHelper.ProcessModSlots(config, newItemId, _database);
+                modSlotHelper.ProcessModSlots(config, newItemId);
 
                 if (logger.IsLogEnabled(LogLevel.Debug))
                 {
@@ -235,7 +235,7 @@ public class WTTCustomItemServiceExtended(
             }
             catch (Exception ex)
             {
-                logger.Error( $"Failed processing modslots for {newItemId}: {ex.Message}");
+                logger.Critical( $"Failed processing modslots for {newItemId}", ex);
             }
         }
 

@@ -3,11 +3,13 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class HideoutStatuetteHelper(ISptLogger<HideoutStatuetteHelper> logger)
+public class HideoutStatuetteHelper(ISptLogger<HideoutStatuetteHelper> logger, DatabaseService databaseService)
 {
     private const string CustomizationItem = "673c7b00cbf4b984b5099181";
 
@@ -21,11 +23,12 @@ public class HideoutStatuetteHelper(ISptLogger<HideoutStatuetteHelper> logger)
         "Statuette_Workbench_1", "Statuette_IntelligenceCenter_1", "Statuette_ShootingRange_1"
     ];
 
-    public void AddToStatuetteSlot(string itemId, DatabaseTables database)
+    public void AddToStatuetteSlot(string itemId)
     {
+        var items = databaseService.GetItems();
         foreach (var statuetteSlotId in StatuetteSlotIds)
         {
-            if (!database.Templates.Items.TryGetValue(CustomizationItem, out var statuetteParent) || statuetteParent.Properties?.Slots == null)
+            if (!items.TryGetValue(CustomizationItem, out var statuetteParent) || statuetteParent.Properties?.Slots == null)
                 continue;
 
             AddItemToStatuetteSlots(itemId, statuetteParent, statuetteSlotId);

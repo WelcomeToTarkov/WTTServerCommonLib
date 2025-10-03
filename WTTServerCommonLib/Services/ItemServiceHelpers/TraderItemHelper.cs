@@ -2,6 +2,7 @@
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 
@@ -9,9 +10,9 @@ using WTTServerCommonLib.Models;
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 [Injectable]
-public class TraderItemHelper(ISptLogger<TraderItemHelper> logger)
+public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseService databaseService)
 {
-    public void AddItem(CustomItemConfig config, string itemId, DatabaseTables database)
+    public void AddItem(CustomItemConfig config, string itemId)
     {
         try
         {
@@ -21,6 +22,7 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger)
                 return;
             }
 
+            var traders = databaseService.GetTraders();
             foreach (var (traderKey, schemes) in config.Traders)
             {
                 if (!TraderIds.TraderMap.TryGetValue(traderKey, out var traderId))
@@ -29,7 +31,7 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger)
                     continue;
                 }
 
-                if (!database.Traders.TryGetValue(traderId, out var trader))
+                if (!traders.TryGetValue(traderId, out var trader))
                 {
                     logger.Warning($"Trader {traderId} not found in DB for item {itemId}");
                     continue;
