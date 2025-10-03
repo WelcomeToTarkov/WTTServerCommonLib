@@ -1,7 +1,50 @@
-﻿using SPTarkov.Server.Core.Models.Common;
+﻿using System.Reflection;
+using SPTarkov.Server.Core.Models.Common;
 
 namespace WTTServerCommonLib.Helpers;
 
+
+public static class ItemTplResolver
+{
+    private static readonly Dictionary<string, MongoId> _cache = new Dictionary<string, MongoId>(StringComparer.OrdinalIgnoreCase);
+    private static bool _isInitialized = false;
+
+    static ItemTplResolver()
+    {
+        InitializeCache();
+    }
+
+    private static void InitializeCache()
+    {
+        if (_isInitialized) return;
+        
+        var fields = typeof(ItemTpl).GetFields(BindingFlags.Public | BindingFlags.Static);
+        foreach (var field in fields)
+        {
+            if (field.FieldType == typeof(MongoId))
+            {
+                _cache[field.Name] = (MongoId)field.GetValue(null);
+            }
+        }
+        
+        _isInitialized = true;
+    }
+
+    public static MongoId ResolveId(string itemName)
+    {
+        if (_cache.TryGetValue(itemName, out var mongoId))
+        {
+            return mongoId;
+        }
+        
+        throw new ArgumentException($"Item template '{itemName}' not found in ItemTpl class");
+    }
+
+    public static bool TryResolveId(string itemName, out MongoId result)
+    {
+        return _cache.TryGetValue(itemName, out result);
+    }
+}
 public static class NameHelper
 {
     public static string ResolveId(string keyOrId, Dictionary<string, MongoId> map)

@@ -4,7 +4,6 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Services.Mod;
 using SPTarkov.Server.Core.Utils;
@@ -12,7 +11,6 @@ using WTTServerCommonLib.Constants;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using WTTServerCommonLib.Services.ItemServiceHelpers;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 using Path = System.IO.Path;
 
 namespace WTTServerCommonLib.Services;
@@ -21,7 +19,6 @@ namespace WTTServerCommonLib.Services;
 public class WTTCustomItemServiceExtended(
     CustomItemService customItemService,
     DatabaseServer databaseServer,
-    ISptLogger<WTTCustomItemServiceExtended> logger,
     JsonUtil jsonUtil,
     ModHelper modHelper)
 {
@@ -43,16 +40,16 @@ public class WTTCustomItemServiceExtended(
             }
             if (!Directory.Exists(finalDir))
             {
-                logger.Log(LogLevel.Error, $"Config directory not found at {finalDir}");
+                Log.Error( $"Config directory not found at {finalDir}");
                 return;
             }
 
-            var jsonFiles = Directory.GetFiles(finalDir, "*.json")
-                .Concat(Directory.GetFiles(finalDir, "*.jsonc"))
+            var jsonFiles = Directory.GetFiles(finalDir, "*.json", SearchOption.AllDirectories)
+                .Concat(Directory.GetFiles(finalDir, "*.jsonc", SearchOption.AllDirectories))
                 .ToArray();
             if (!jsonFiles.Any())
             {
-                logger.Log(LogLevel.Warn, $"No JSON config files found in {finalDir}");
+                Log.Warn( $"No JSON config files found in {finalDir}");
                 return;
             }
 
@@ -66,15 +63,15 @@ public class WTTCustomItemServiceExtended(
                 }
                 catch (Exception ex)
                 {
-                    logger.Log(LogLevel.Error, $"Error processing {Path.GetFileName(filePath)}: {ex.Message}");
+                    Log.Error( $"Error processing {Path.GetFileName(filePath)}: {ex.Message}");
                 }
             }
 
-            logger.Log(LogLevel.Info, $"Created {totalItemsCreated} custom items from {jsonFiles.Length} files");
+            Log.Info( $"Created {totalItemsCreated} custom items from {jsonFiles.Length} files");
         }
         catch (Exception ex)
         {
-            logger.Log(LogLevel.Error, $"Error loading configs: {ex.Message}");
+            Log.Error( $"Error loading configs: {ex.Message}");
         }
     }
 
@@ -89,13 +86,13 @@ public class WTTCustomItemServiceExtended(
         }
         catch (Exception ex)
         {
-            logger.Log(LogLevel.Error, $"Failed deserializing {Path.GetFileName(filePath)}: {ex.Message}");
+            Log.Error( $"Failed deserializing {Path.GetFileName(filePath)}: {ex.Message}");
             return 0;
         }
 
         if (config == null)
         {
-            logger.Log(LogLevel.Warn, $"No valid items found in {Path.GetFileName(filePath)}");
+            Log.Warn( $"No valid items found in {Path.GetFileName(filePath)}");
             return 0;
         }
 
@@ -116,7 +113,7 @@ public class WTTCustomItemServiceExtended(
         {
             var itemDetails = new NewItemFromCloneDetails
             {
-                ItemTplToClone = NameHelper.ResolveId(config.ItemTplToClone, ItemMaps.ItemMap),
+                ItemTplToClone = ItemTplResolver.ResolveId(config.ItemTplToClone),
                 ParentId = NameHelper.ResolveId(config.ParentId, ItemMaps.ItemBaseClassMap),
                 NewId = newItemId,
                 FleaPriceRoubles = config.FleaPriceRoubles,
@@ -127,7 +124,7 @@ public class WTTCustomItemServiceExtended(
             };
 
             customItemService.CreateItemFromClone(itemDetails);
-            logger.Log(LogLevel.Info, $"Created item {newItemId}");
+            Log.Info( $"Created item {newItemId}");
 
             ProcessAdditionalProperties(newItemId, config);
 
@@ -135,7 +132,7 @@ public class WTTCustomItemServiceExtended(
         }
         catch (Exception ex)
         {
-            logger.Log(LogLevel.Error, $"Failed to create item {newItemId}: {ex.Message}");
+            Log.Error( $"Failed to create item {newItemId}: {ex.Message}");
             return false;
         }
     }
@@ -191,7 +188,7 @@ public class WTTCustomItemServiceExtended(
     {
         if (_deferredModSlotConfigs.Any(d => d.newItemId == newItemId))
         {
-            logger.Log(LogLevel.Warn, $"Deferred modslot for {newItemId} already exists, skipping.");
+            Log.Warn( $"Deferred modslot for {newItemId} already exists, skipping.");
             return;
         }
         _deferredModSlotConfigs.Add((newItemId, config));
@@ -200,11 +197,11 @@ public class WTTCustomItemServiceExtended(
     {
         if (_deferredModSlotConfigs.Count == 0)
         {
-            logger.Log(LogLevel.Info, "No deferred modslots to process");
+            Log.Info( "No deferred modslots to process");
             return;
         }
 
-        logger.Log(LogLevel.Info, $"Processing {_deferredModSlotConfigs.Count} deferred modslots...");
+        Log.Info( $"Processing {_deferredModSlotConfigs.Count} deferred modslots...");
 
         foreach (var (newItemId, config) in _deferredModSlotConfigs)
         {
@@ -215,16 +212,16 @@ public class WTTCustomItemServiceExtended(
                     return;
                 }
                 ModslotHelper.ProcessModSlots(config, newItemId, _database);
-                logger.Log(LogLevel.Debug, $"Processed modslots for {newItemId}");
+                Log.Debug( $"Processed modslots for {newItemId}");
             }
             catch (Exception ex)
             {
-                logger.Log(LogLevel.Error, $"Failed processing modslots for {newItemId}: {ex.Message}");
+                Log.Error( $"Failed processing modslots for {newItemId}: {ex.Message}");
             }
         }
 
         _deferredModSlotConfigs.Clear();
         
-        logger.Log(LogLevel.Info, "Finished processing deferred modslots");
+        Log.Info( "Finished processing deferred modslots");
     }
 }

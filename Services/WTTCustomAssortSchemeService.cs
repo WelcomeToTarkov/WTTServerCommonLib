@@ -7,6 +7,7 @@ using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
+using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using Path = System.IO.Path;
 
@@ -37,7 +38,7 @@ public class WTTCustomAssortSchemeService(
             .ToArray();
         if (jsonFiles.Length == 0)
         {
-            logger.Warning($"No assort scheme files found in {finalDir}");
+            Log.Warn($"No assort scheme files found in {finalDir}");
             return;
         }
 
@@ -51,7 +52,7 @@ public class WTTCustomAssortSchemeService(
                 if (assortData != null)
                 {
                     _customAssortSchemes.Add(assortData);
-                    logger.Info($"Loaded {assortData.Count} trader assort(s) from {Path.GetFileName(file)}");
+                    Log.Info($"Loaded {assortData.Count} trader assort(s) from {Path.GetFileName(file)}");
                 }
             }
             catch (Exception ex)
@@ -76,13 +77,13 @@ public class WTTCustomAssortSchemeService(
 
                 if (!TraderIds.TraderMap.TryGetValue(traderKey, out var traderId))
                 {
-                    logger.Warning($"Unknown trader key '{traderKey}'");
+                    Log.Warn($"Unknown trader key '{traderKey}'");
                     continue;
                 }
 
                 if (!tables.Traders.TryGetValue(traderId, out var trader))
                 {
-                    logger.Warning($"Trader not found in DB: ({traderId})");
+                    Log.Warn($"Trader not found in DB: ({traderId})");
                     continue;
                 }
 
@@ -98,7 +99,7 @@ public class WTTCustomAssortSchemeService(
                     trader.Assort.LoyalLevelItems[levelItem.Key] = levelItem.Value;
                 }
 
-                logger.Info($"Merged {newAssort.Items.Count} items into trader");
+                Log.Info($"Merged {newAssort.Items.Count} items into trader");
             }
         }
     }

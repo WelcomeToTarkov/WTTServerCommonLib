@@ -66,7 +66,7 @@ public static class TraderItemHelper
                             var barter = new BarterScheme
                             {
                                 Count = b.Count,
-                                Template = NameHelper.ResolveId(b.Template, ItemMaps.ItemMap)
+                                Template = ItemTplResolver.ResolveId(b.Template)
                             };
 
                             if (b.Level != null) barter.Level = b.Level;

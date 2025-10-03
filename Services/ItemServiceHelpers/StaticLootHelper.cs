@@ -41,7 +41,7 @@ public static class StaticLootHelper
             var location = kv.Value;
 
             var staticLootDict = location.StaticLoot?.Value;
-            var actualContainerId = NameHelper.ResolveId(containerId, ItemMaps.ItemMap);
+            var actualContainerId = ItemTplResolver.ResolveId(containerId);
             
             if (staticLootDict == null || !staticLootDict.TryGetValue(actualContainerId, out var containerDetails))
             {
