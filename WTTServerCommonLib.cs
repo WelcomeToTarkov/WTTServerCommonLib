@@ -28,6 +28,7 @@ public class WTTServerCommonLib(
     WTTCustomLootspawnService customLootspawnService,
     WTTCustomQuestService customQuestService,
     WTTLocaleService localeService,
+    WTTCustomHideoutRecipes hideoutRecipes,
     ISptLogger<WTTServerCommonLib> logger) : IOnLoad
 {
     public WTTCustomItemServiceExtended CustomItemServiceExtended { get; } = customItemServiceExtended;
@@ -35,6 +36,7 @@ public class WTTServerCommonLib(
     public WTTCustomLootspawnService CustomLootspawnService { get; } = customLootspawnService;
     public WTTCustomQuestService CustomQuestService { get; } = customQuestService;
     public WTTLocaleService LocaleService { get; } = localeService;
+    public WTTCustomHideoutRecipes HideoutRecipes { get; } = hideoutRecipes;
     
     
     public Task OnLoad()

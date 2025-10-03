@@ -4,13 +4,8 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Eft.Hideout;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
-using SPTarkov.Server.Core.Services.Mod;
-using SPTarkov.Server.Core.Utils;
 using WTTServerCommonLib.Helpers;
-using WTTServerCommonLib.Models;
-using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services;
 
@@ -43,7 +38,7 @@ public class WTTCustomHideoutRecipes(
         {
             var relativePath = Path.GetRelativePath(finalDir, file);
 
-            HideoutProduction recipe = null;
+            HideoutProduction recipe;
             try
             {
                 recipe = modHelper.GetJsonDataFromFile<HideoutProduction>(finalDir, relativePath);
@@ -54,26 +49,20 @@ public class WTTCustomHideoutRecipes(
                 continue;
             }
 
-            if (recipe == null)
-            {
-                Log.Debug($"[HideoutRecipes] {file} returned null");
-                continue;
-            }
-
             if (string.IsNullOrWhiteSpace(recipe.Id))
             {
                 Log.Debug($"[HideoutRecipes] Missing Id in {file}");
                 continue;
             }
 
-            bool recipeExists = _database.Hideout.Production.Recipes.Any(r => r.Id == recipe.Id);
+            bool recipeExists = _database.Hideout.Production.Recipes != null && _database.Hideout.Production.Recipes.Any(r => r.Id == recipe.Id);
             if (recipeExists)
             {
                 Log.Debug($"[HideoutRecipes] Recipe {recipe.Id} already exists, skipping");
                 continue;
             }
 
-            _database.Hideout.Production.Recipes.Add(recipe);
+            _database.Hideout.Production.Recipes?.Add(recipe);
             Log.Info($"[HideoutRecipes] Added hideout recipe {recipe.Id} for item {recipe.EndProduct}");
         }
     }
