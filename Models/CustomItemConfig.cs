@@ -87,6 +87,14 @@ namespace WTTServerCommonLib.Models
         [JsonPropertyName("addtoSpecialSlots")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? AddToSpecialSlots { get; set; }
+        
+        [JsonPropertyName("addtoGeneratorAsFuel")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddToGeneratorAsFuel { get; set; }
+        
+        [JsonPropertyName("generatorFuelSlotStages")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string>? GeneratorFuelSlotStages { get; set; }
 
         public void Validate()
         {
@@ -292,6 +300,21 @@ namespace WTTServerCommonLib.Models
                             throw new InvalidDataException(
                                 $"weaponPresets[{i}].items[{j}] has a slotId but no parentId");
                     }
+                }
+            }
+
+            if (GeneratorFuelSlotStages != null)
+            {
+                if (GeneratorFuelSlotStages.Count == 0)
+                    throw new InvalidDataException("generatorFuelSlotStages was provided but is empty");
+                
+                for (var i = 0; i <  GeneratorFuelSlotStages.Count; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(GeneratorFuelSlotStages[i]))
+                        throw new InvalidDataException($"generatorFuelSlotStages[{i}] is null");
+                    
+                    if (!(GeneratorFuelSlotStages[i]?.Any(char.IsDigit) ?? false)) 
+                        throw new InvalidDataException($"generatorFuelSlotStages[{i}] must contain a number");
                 }
             }
         }

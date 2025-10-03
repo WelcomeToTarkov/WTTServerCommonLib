@@ -172,6 +172,9 @@ public class WTTCustomItemServiceExtended(
         {
             // TODO: Add bot processing here
         }
+        
+        if (config is { AddToGeneratorAsFuel: true, GeneratorFuelSlotStages: not null })
+            GeneratorFuelHelper.AddGeneratorFuel(config, newItemId, _database);
     }
     private void AddDeferredModSlot(string newItemId, CustomItemConfig config)
     {
