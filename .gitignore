@@ -1,7 +1,14 @@
 # Ignore Visual Studio temporary files, build results, and build directories
-.vs/
-build/
-.idea/
-.user/
-bin/
-obj/
+/.vs/
+/build/
+/.idea/
+/.user/
+/bin/
+/obj/
+/.idea/.idea.WTTServerCommonLib.dir/
+/.idea/.idea.WTTServerCommonLib.dir/.idea/
+/.idea/.idea.WTTServerCommonLib.dir/.idea/encodings.xml
+/.idea/.idea.WTTServerCommonLib.dir/.idea/indexLayout.xml
+/.idea/.idea.WTTServerCommonLib.dir/.idea/projectSettingsUpdater.xml
+/.idea/.idea.WTTServerCommonLib.dir/.idea/vcs.xml
+/.idea/.idea.WTTServerCommonLib.dir/.idea/workspace.xml
