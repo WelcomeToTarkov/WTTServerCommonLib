@@ -87,6 +87,30 @@ namespace WTTServerCommonLib.Models
         [JsonPropertyName("addtoSpecialSlots")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? AddToSpecialSlots { get; set; }
+        
+        [JsonPropertyName("addtoGeneratorAsFuel")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddToGeneratorAsFuel { get; set; }
+        
+        [JsonPropertyName("generatorFuelSlotStages")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public List<string>? GeneratorFuelSlotStages { get; set; }
+        
+        [JsonPropertyName("addtoHideoutPosterSlots")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddToHideoutPosterSlots { get; set; }
+        
+        [JsonPropertyName("addPosterToMaps")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddPosterToMaps { get; set; }
+        
+        [JsonPropertyName("posterSpawnProbability")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? PosterSpawnProbability { get; set; }
+        
+        [JsonPropertyName("addtoStatuetteSlots")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddToStatuetteSlots { get; set; }
 
         public void Validate()
         {
@@ -203,8 +227,7 @@ namespace WTTServerCommonLib.Models
                         throw new InvalidDataException($"hallOfFameSlots[{i}] must be a non-empty string");
                 }
             }
-
-
+            
             if (StaticLootContainers != null)
             {
                 if (StaticLootContainers.Count == 0)
@@ -293,6 +316,44 @@ namespace WTTServerCommonLib.Models
                                 $"weaponPresets[{i}].items[{j}] has a slotId but no parentId");
                     }
                 }
+            }
+
+            if (GeneratorFuelSlotStages != null)
+            {
+                if (GeneratorFuelSlotStages.Count == 0)
+                    throw new InvalidDataException("generatorFuelSlotStages was provided but is empty");
+                
+                for (var i = 0; i <  GeneratorFuelSlotStages.Count; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(GeneratorFuelSlotStages[i]))
+                        throw new InvalidDataException($"generatorFuelSlotStages[{i}] is null");
+                    
+                    if (!(GeneratorFuelSlotStages[i]?.Any(char.IsDigit) ?? false)) 
+                        throw new InvalidDataException($"generatorFuelSlotStages[{i}] must contain a number");
+                }
+            }
+
+            if (AddToHideoutPosterSlots == null)
+            {
+                throw new InvalidDataException("AddToHideoutPosterSlots is required and must true or false");
+            }
+
+            if (AddPosterToMaps == null)
+            {
+                throw new InvalidDataException("AddPosterToMaps is required and must true or false");
+            }
+            
+            if (PosterSpawnProbability != null)
+            {
+                if (PosterSpawnProbability < 0)
+                {
+                    throw new InvalidDataException("PosterSpawnProbability must be >= 0");
+                }
+            }
+
+            if (AddToStatuetteSlots == null)
+            {
+                throw new InvalidDataException("AddToStatuetteSlots is required and must true or false");
             }
         }
 
