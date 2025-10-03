@@ -39,8 +39,6 @@ public class StaticLootHelper(DatabaseService databaseService, ISptLogger<Static
 
         foreach (var (locationId, location) in locations)
         {
-            var staticLootDict = location.StaticLoot?.Value;
-
             if (location.StaticLoot is null)
             {
                 continue;
