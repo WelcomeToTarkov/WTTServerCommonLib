@@ -95,6 +95,10 @@ namespace WTTServerCommonLib.Models
         [JsonPropertyName("generatorFuelSlotStages")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<string>? GeneratorFuelSlotStages { get; set; }
+        
+        [JsonPropertyName("addtoHideoutPosterSlots")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddToHideoutPosterSlots { get; set; }
 
         public void Validate()
         {
@@ -211,8 +215,7 @@ namespace WTTServerCommonLib.Models
                         throw new InvalidDataException($"hallOfFameSlots[{i}] must be a non-empty string");
                 }
             }
-
-
+            
             if (StaticLootContainers != null)
             {
                 if (StaticLootContainers.Count == 0)
@@ -316,6 +319,11 @@ namespace WTTServerCommonLib.Models
                     if (!(GeneratorFuelSlotStages[i]?.Any(char.IsDigit) ?? false)) 
                         throw new InvalidDataException($"generatorFuelSlotStages[{i}] must contain a number");
                 }
+            }
+
+            if (AddToHideoutPosterSlots == null)
+            {
+                throw new InvalidDataException("AddToHideoutPosterSlots is required and must true or false");
             }
         }
 

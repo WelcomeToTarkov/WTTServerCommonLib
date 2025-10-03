@@ -175,6 +175,9 @@ public class WTTCustomItemServiceExtended(
         
         if (config is { AddToGeneratorAsFuel: true, GeneratorFuelSlotStages: not null })
             GeneratorFuelHelper.AddGeneratorFuel(config, newItemId, _database);
+        
+        if (config.AddToHideoutPosterSlots == true)
+            HideoutPosterHelper.AddToPosterSlot(newItemId, _database);
     }
     private void AddDeferredModSlot(string newItemId, CustomItemConfig config)
     {
