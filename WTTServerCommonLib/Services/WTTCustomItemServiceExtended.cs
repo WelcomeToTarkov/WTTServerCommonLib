@@ -180,7 +180,7 @@ public class WTTCustomItemServiceExtended(
             specialSlotsHelper.AddToSpecialSlots(config, newItemId, _database);
 
         if (config is { AddToStaticLootContainers: true, StaticLootContainers: not null })
-            staticLootHelper.ProcessStaticLootContainers(config, newItemId, _database);
+            staticLootHelper.ProcessStaticLootContainers(config, newItemId);
 
         if (config.AddToBots == true)
         {
@@ -192,10 +192,10 @@ public class WTTCustomItemServiceExtended(
         
         if (config.AddToHideoutPosterSlots == true)
             hideoutPosterHelper.AddToPosterSlot(newItemId, _database);
-        
-        if (config is { AddPosterToMaps: true, PosterSpawnProbability: not null} )
-            posterLootHelper.ProcessPosterLoot(config, newItemId, _database);
-        
+
+        if (config is { AddPosterToMaps: true, PosterSpawnProbability: not null })
+            posterLootHelper.ProcessPosterLoot(config, newItemId);
+
         if (config.AddToStatuetteSlots == true)
             hideoutStatuetteHelper.AddToStatuetteSlot(newItemId, _database);
     }
