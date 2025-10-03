@@ -1,16 +1,14 @@
 ﻿using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using WTTServerCommonLib.Helpers;
-using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 public static class HideoutStatuetteHelper
 {
     private static readonly string CustomizationItem = "673c7b00cbf4b984b5099181";
-    private static readonly string[] StatuetteSlotIds =
+    private static readonly string?[] StatuetteSlotIds =
     [
         "Statuette_Gym_1", "Statuette_PlaceOfFame_1", "Statuette_PlaceOfFame_2",
         "Statuette_PlaceOfFame_3", "Statuette_Heating_1", "Statuette_Heating_2",
@@ -22,33 +20,33 @@ public static class HideoutStatuetteHelper
 
     public static void AddToStatuetteSlot(string itemId, DatabaseTables database)
     {
-        foreach (var StatuetteSlotId in StatuetteSlotIds)
+        foreach (var statuetteSlotId in StatuetteSlotIds)
         {
-            if (!database.Templates.Items.TryGetValue(CustomizationItem, out var StatuetteParent) || StatuetteParent.Properties?.Slots == null)
+            if (!database.Templates.Items.TryGetValue(CustomizationItem, out var statuetteParent) || statuetteParent.Properties?.Slots == null)
                 continue;
 
-            AddItemToStatuetteSlots(itemId, StatuetteParent, StatuetteSlotId);
+            AddItemToStatuetteSlots(itemId, statuetteParent, statuetteSlotId);
         }
     }
 
-    private static void AddItemToStatuetteSlots(string itemId, TemplateItem StatuetteItem, string StatuetteSlotId)
+    private static void AddItemToStatuetteSlots(string itemId, TemplateItem statuetteItem, string? statuetteSlotId)
     {
-        foreach (var slot in StatuetteItem.Properties.Slots)
+        foreach (var slot in statuetteItem.Properties?.Slots)
         {
             if (string.IsNullOrWhiteSpace(slot.Name) || slot.Properties?.Filters == null)
                 continue;
 
-            string slotType = GetMatchingSlotType(slot.Name);
-            if (StatuetteSlotId != slotType)
+            string? slotType = GetMatchingSlotType(slot.Name);
+            if (statuetteSlotId != slotType)
                 continue;
 
-            AddItemToFilters(itemId, slot, StatuetteItem.Name);
+            AddItemToFilters(itemId, slot, statuetteItem.Name);
         }
     }
 
     private static void AddItemToFilters(string itemId, Slot slot, string? slotName)
     {
-        foreach (var filter in slot.Properties.Filters)
+        foreach (var filter in slot.Properties?.Filters)
         {
             filter.Filter ??= new HashSet<MongoId>();
 
@@ -59,11 +57,11 @@ public static class HideoutStatuetteHelper
         }
     }
 
-    private static string GetMatchingSlotType(string slotName)
+    private static string? GetMatchingSlotType(string slotName)
     {
         foreach (var type in StatuetteSlotIds)
         {
-            if (slotName.StartsWith(type, StringComparison.OrdinalIgnoreCase))
+            if (type != null && slotName.StartsWith(type, StringComparison.OrdinalIgnoreCase))
                 return type;
         }
         return null;

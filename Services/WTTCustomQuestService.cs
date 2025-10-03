@@ -10,6 +10,7 @@ using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Routers;
 using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Utils;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using Path = System.IO.Path;
@@ -21,7 +22,8 @@ public class WTTCustomQuestService(
     DatabaseServer databaseServer,
     ConfigServer cfgServer,
     ImageRouter imageRouter,
-    ModHelper modHelper)
+    ModHelper modHelper,
+    JsonUtil jsonUtil)
 {
     private DatabaseTables _database = null!;
 
@@ -71,41 +73,14 @@ public class WTTCustomQuestService(
     {
         string traderBasePath = Path.Combine(questsBasePath, traderId);
 
-        var questFiles  = LoadJsonFiles<Dictionary<string, Quest>>(traderBasePath);
-        var assortFiles = LoadJsonFiles<Dictionary<string, Dictionary<string, string>>>(Path.Combine(traderBasePath, "questAssort"));
+        var questFiles  = ConfigHelper.LoadAllJsonFiles<Dictionary<string, Quest>>(traderBasePath, jsonUtil);
+        var assortFiles = ConfigHelper.LoadAllJsonFiles<Dictionary<string, Dictionary<string, string>>>(Path.Combine(traderBasePath, "questAssort"), jsonUtil);
         var imageFiles  = LoadImageFiles(Path.Combine(traderBasePath, "images"));
 
         ImportQuestData(questFiles, traderId);
         ImportQuestAssortData(assortFiles, traderId);
         ImportLocaleData(traderId, questsBasePath);
         ImportImageData(imageFiles, traderId);
-    }
-
-    private List<T> LoadJsonFiles<T>(string directoryPath)
-    {
-        var result = new List<T>();
-
-        if (!Directory.Exists(directoryPath)) return result;
-
-        foreach (var filePath in Directory.GetFiles(directoryPath, "*.json"))
-        {
-            try
-            {
-                string content = File.ReadAllText(filePath);
-                var jsonData = JsonSerializer.Deserialize<T>(content);
-                if (jsonData != null)
-                {
-                    result.Add(jsonData);
-                    Log.Info($"Loaded JSON file: {filePath}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error loading JSON file {filePath}: {ex.Message}");
-            }
-        }
-
-        return result;
     }
 
     private readonly string[] _validImageExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif"];
@@ -160,12 +135,6 @@ public class WTTCustomQuestService(
                     continue;
                 }
 
-                if (trader.QuestAssort == null)
-                {
-                    Log.Warn($"Trader Quest Assort is null for trader {traderId}");
-                    continue;
-                }
-                
                 if (!trader.QuestAssort.ContainsKey(questId))
                 {
                     trader.QuestAssort[questId] = new Dictionary<MongoId, MongoId>();
@@ -192,37 +161,26 @@ public class WTTCustomQuestService(
             return;
         }
 
-        var localeFiles = Directory.GetFiles(localesPath, "*.json");
-        if (!localeFiles.Any())
+        var locales = ConfigHelper.LoadLocalesFromDirectory(localesPath, jsonUtil);
+    
+        if (!locales.Any())
         {
-            Log.Warn($"{traderId}: No locale files found");
+            Log.Warn($"{traderId}: No locale files found or loaded");
             return;
         }
 
-        var locales = new Dictionary<string, Dictionary<string, string>>();
-        Dictionary<string, string>? fallback = null;
-
-        foreach (var file in localeFiles)
+        // Find fallback locale (prefer English, otherwise use first available)
+        Dictionary<string, string>? fallback;
+        if (locales.TryGetValue("en", out var englishLocales))
         {
-            try
-            {
-                string localeCode = Path.GetFileNameWithoutExtension(file);
-                string content = File.ReadAllText(file);
-                var localeData = JsonSerializer.Deserialize<Dictionary<string, string>>(content) ?? new();
-
-                locales[localeCode] = localeData;
-                if (localeCode.Equals("en", StringComparison.OrdinalIgnoreCase))
-                {
-                    fallback = localeData;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error loading locale file {file}: {ex.Message}");
-            }
+            fallback = englishLocales;
+            Log.Debug($"{traderId}: Using English as fallback locale");
         }
-
-        fallback ??= locales.Values.FirstOrDefault() ?? new();
+        else
+        {
+            fallback = locales.Values.FirstOrDefault() ?? new Dictionary<string, string>();
+            Log.Debug($"{traderId}: Using {locales.Keys.First()} as fallback locale");
+        }
 
         foreach (var (localeCode, lazyLocale) in _database.Locales.Global)
         {
@@ -245,9 +203,8 @@ public class WTTCustomQuestService(
             }
         }
 
-        Log.Info($"{traderId}: Loaded {locales.Count} locale files");
+        Log.Info($"{traderId}: Loaded {locales.Count} locale files (including JSONC)");
     }
-
     private void ImportImageData(List<string> imageFiles, string traderId)
     {
         foreach (var imagePath in imageFiles)

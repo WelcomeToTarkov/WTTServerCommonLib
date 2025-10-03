@@ -1,16 +1,14 @@
 ﻿using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using WTTServerCommonLib.Helpers;
-using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 public static class HideoutPosterHelper
 {
     private static readonly string CustomizationItem = "673c7b00cbf4b984b5099181";
-    private static readonly string[] PosterSlotIds =
+    private static readonly string?[] PosterSlotIds =
     [
         "Poster_Security_1", "Poster_Security_2", "Poster_Generator_1", "Poster_Generator_2", "Poster_ScavCase_1",
         "Poster_ScavCase_2", "Poster_Stash_1", "Poster_WaterCloset_1", "Poster_ShootingRange_1", "Poster_Workbench_1",
@@ -31,14 +29,14 @@ public static class HideoutPosterHelper
         }
     }
 
-    private static void AddItemToPosterSlots(string itemId, TemplateItem posterItem, string posterSlotId)
+    private static void AddItemToPosterSlots(string itemId, TemplateItem posterItem, string? posterSlotId)
     {
-        foreach (var slot in posterItem.Properties.Slots)
+        foreach (var slot in posterItem.Properties?.Slots)
         {
             if (string.IsNullOrWhiteSpace(slot.Name) || slot.Properties?.Filters == null)
                 continue;
 
-            string slotType = GetMatchingSlotType(slot.Name);
+            string? slotType = GetMatchingSlotType(slot.Name);
             if (posterSlotId != slotType)
                 continue;
 
@@ -48,7 +46,7 @@ public static class HideoutPosterHelper
 
     private static void AddItemToFilters(string itemId, Slot slot, string? slotName)
     {
-        foreach (var filter in slot.Properties.Filters)
+        foreach (var filter in slot.Properties?.Filters)
         {
             filter.Filter ??= new HashSet<MongoId>();
 
@@ -59,11 +57,11 @@ public static class HideoutPosterHelper
         }
     }
 
-    private static string GetMatchingSlotType(string slotName)
+    private static string? GetMatchingSlotType(string slotName)
     {
         foreach (var type in PosterSlotIds)
         {
-            if (slotName.StartsWith(type, StringComparison.OrdinalIgnoreCase))
+            if (type != null && slotName.StartsWith(type, StringComparison.OrdinalIgnoreCase))
                 return type;
         }
         return null;

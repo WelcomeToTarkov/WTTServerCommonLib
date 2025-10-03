@@ -8,6 +8,7 @@ using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
 using Locations = SPTarkov.Server.Core.Models.Spt.Server.Locations;
 using Path = System.IO.Path;
+using WTTServerCommonLib.Helpers;
 
 namespace WTTServerCommonLib.Services;
 
@@ -31,7 +32,7 @@ public class WTTCustomLootspawnService(
         var locations = database.Locations.GetDictionary();
 
         // Load forced spawns
-        var forcedPath = Path.Combine(finalDir, "customSpawnpointsForced.json");
+        var forcedPath = ConfigHelper.LoadJsonFile("customSpawnpointsForced.json", finalDir);
         if (File.Exists(forcedPath))
         {
             var forcedJson = File.ReadAllText(forcedPath);
@@ -46,10 +47,8 @@ public class WTTCustomLootspawnService(
 
                     var looseLoot = location.LooseLoot.Value;
 
-                    // Create mutable list from existing forced spawns
                     var existingForced = looseLoot?.SpawnpointsForced?.ToList() ?? new List<Spawnpoint>();
 
-                    // Merge with duplicate check
                     foreach (var newSpawn in kvp.Value)
                     {
                         if (existingForced.All(sp => sp.LocationId != newSpawn.LocationId))
@@ -58,13 +57,12 @@ public class WTTCustomLootspawnService(
                         }
                     }
 
-                    // Always assign back to ensure mutable collection
                     if (looseLoot != null) looseLoot.SpawnpointsForced = existingForced;
                 }
         }
 
         // Load general custom spawns
-        var generalPath = Path.Combine(finalDir, "customSpawnpoints.json");
+        var generalPath = ConfigHelper.LoadJsonFile("customSpawnpoints.json", finalDir);
         if (File.Exists(generalPath))
         {
             var generalJson = File.ReadAllText(generalPath);
@@ -108,7 +106,6 @@ public class WTTCustomLootspawnService(
                     {
                         existing.Template ??= new SpawnpointTemplate();
                         
-                        // Directly assign simple properties
                         existing.Template.IsContainer = customSpawn.Template.IsContainer;
                         existing.Template.UseGravity = customSpawn.Template.UseGravity;
                         existing.Template.RandomRotation = customSpawn.Template.RandomRotation;

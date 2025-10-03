@@ -32,15 +32,16 @@ public class WTTCustomAssortSchemeService(
             throw new DirectoryNotFoundException($"Config directory not found at {finalDir}");
         }
 
-        var files = Directory.GetFiles(finalDir, "*.json", SearchOption.TopDirectoryOnly);
-
-        if (files.Length == 0)
+        var jsonFiles = Directory.GetFiles(finalDir, "*.json")
+            .Concat(Directory.GetFiles(finalDir, "*.jsonc"))
+            .ToArray();
+        if (jsonFiles.Length == 0)
         {
             logger.Warning($"No assort scheme files found in {finalDir}");
             return;
         }
 
-        foreach (var file in files)
+        foreach (var file in jsonFiles)
         {
             try
             {

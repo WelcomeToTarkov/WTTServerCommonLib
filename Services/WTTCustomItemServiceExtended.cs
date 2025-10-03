@@ -47,7 +47,9 @@ public class WTTCustomItemServiceExtended(
                 return;
             }
 
-            var jsonFiles = Directory.GetFiles(finalDir, "*.json");
+            var jsonFiles = Directory.GetFiles(finalDir, "*.json")
+                .Concat(Directory.GetFiles(finalDir, "*.jsonc"))
+                .ToArray();
             if (!jsonFiles.Any())
             {
                 logger.Log(LogLevel.Warn, $"No JSON config files found in {finalDir}");

@@ -8,13 +8,13 @@ namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
 public static class HallOfFameHelper
 {
-    private static readonly string[] ValidTypes = { "dogtag", "smallTrophies", "bigTrophies" };
+    private static readonly string[] ValidTypes = ["dogtag", "smallTrophies", "bigTrophies"];
     private static readonly string[] HallItemIds =
-    {
+    [
         "63dbd45917fff4dee40fe16e", // Level 1
         "65424185a57eea37ed6562e9", // Level 2
         "6542435ea57eea37ed6562f0"  // Level 3
-    };
+    ];
 
     public static void AddToHallOfFame(CustomItemConfig itemConfig, string itemId, DatabaseTables database)
     {
