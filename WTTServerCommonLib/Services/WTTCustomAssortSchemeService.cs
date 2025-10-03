@@ -16,7 +16,7 @@ namespace WTTServerCommonLib.Services;
 [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public class WTTCustomAssortSchemeService(
     DatabaseServer databaseServer,
-    ISptLogger<WTTCustomItemServiceExtended> logger,
+    ISptLogger<WTTCustomAssortSchemeService> logger,
     JsonUtil jsonUtil,
     ModHelper modHelper)
 {
@@ -38,7 +38,7 @@ public class WTTCustomAssortSchemeService(
             .ToArray();
         if (jsonFiles.Length == 0)
         {
-            Log.Warn($"No assort scheme files found in {finalDir}");
+            logger.Warning($"No assort scheme files found in {finalDir}");
             return;
         }
 
@@ -52,7 +52,7 @@ public class WTTCustomAssortSchemeService(
                 if (assortData != null)
                 {
                     _customAssortSchemes.Add(assortData);
-                    Log.Info($"Loaded {assortData.Count} trader assort(s) from {Path.GetFileName(file)}");
+                    logger.Info($"Loaded {assortData.Count} trader assort(s) from {Path.GetFileName(file)}");
                 }
             }
             catch (Exception ex)
@@ -77,13 +77,13 @@ public class WTTCustomAssortSchemeService(
 
                 if (!TraderIds.TraderMap.TryGetValue(traderKey, out var traderId))
                 {
-                    Log.Warn($"Unknown trader key '{traderKey}'");
+                    logger.Warning($"Unknown trader key '{traderKey}'");
                     continue;
                 }
 
                 if (!tables.Traders.TryGetValue(traderId, out var trader))
                 {
-                    Log.Warn($"Trader not found in DB: ({traderId})");
+                    logger.Warning($"Trader not found in DB: ({traderId})");
                     continue;
                 }
 
@@ -99,7 +99,7 @@ public class WTTCustomAssortSchemeService(
                     trader.Assort.LoyalLevelItems[levelItem.Key] = levelItem.Value;
                 }
 
-                Log.Info($"Merged {newAssort.Items.Count} items into trader");
+                logger.Info($"Merged {newAssort.Items.Count} items into trader");
             }
         }
     }

@@ -1,30 +1,32 @@
-﻿using SPTarkov.Server.Core.Models.Common;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+using SPTarkov.Server.Core.Models.Utils;
 using WTTServerCommonLib.Models;
+using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class PosterLootHelper
+[Injectable]
+public class PosterLootHelper(ISptLogger<PosterLootHelper> logger)
 {
-    public static void ProcessPosterLoot(CustomItemConfig config, string itemId, DatabaseTables? db)
+    public void ProcessPosterLoot(CustomItemConfig config, string itemId, DatabaseTables? db)
     {
         var locations = db?.Locations.GetDictionary();
         if (locations == null || locations.Count == 0) return;
 
-        foreach (var kv in locations)
+        foreach (var (map, location) in locations)
         {
-            var loc = kv.Value;
-            var spawnPoints = loc.LooseLoot?.Value?.Spawnpoints;
+            var spawnPoints = location.LooseLoot?.Value?.Spawnpoints;
             if (spawnPoints == null) continue;
 
             var spawnPointsList = spawnPoints as IList<Spawnpoint> ?? spawnPoints.ToList();
             if (!ReferenceEquals(spawnPoints, spawnPointsList))
-                if (loc.LooseLoot != null)
-                    if (loc.LooseLoot.Value != null)
-                        loc.LooseLoot.Value.Spawnpoints = spawnPointsList;
+                if (location.LooseLoot != null)
+                    if (location.LooseLoot.Value != null)
+                        location.LooseLoot.Value.Spawnpoints = spawnPointsList;
 
             foreach (var spawnpoint in spawnPointsList)
             {
@@ -60,7 +62,10 @@ public static class PosterLootHelper
                     RelativeProbability = config.PosterSpawnProbability
                 });
 
-                Log.Debug($"[PosterLoot] {kv.Key} + {spawnpoint.LocationId ?? "?"} id={templateId} key={newId}");
+                if (logger.IsLogEnabled(LogLevel.Debug))
+                {
+                    logger.Debug($"[PosterLoot] {map} + {spawnpoint.LocationId ?? "?"} id={templateId} key={newId}");
+                }
             }
         }
     }

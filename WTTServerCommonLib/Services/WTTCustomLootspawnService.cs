@@ -16,11 +16,12 @@ namespace WTTServerCommonLib.Services;
 public class WTTCustomLootspawnService(
     DatabaseServer databaseServer,
     JsonUtil jsonUtil,
-    ModHelper modHelper)
+    ModHelper modHelper,
+    ConfigHelper configHelper
+    )
 {
     
     private const double Epsilon = 0.0001;
-    
     
     public void AddCustomLootSpawns(Assembly assembly, string? relativePath = null)
     {
@@ -32,7 +33,7 @@ public class WTTCustomLootspawnService(
         var locations = database.Locations.GetDictionary();
 
         // Load forced spawns
-        var forcedPath = ConfigHelper.LoadJsonFile("customSpawnpointsForced.json", finalDir);
+        var forcedPath = configHelper.LoadJsonFile("customSpawnpointsForced.json", finalDir);
         if (File.Exists(forcedPath))
         {
             var forcedJson = File.ReadAllText(forcedPath);
@@ -62,22 +63,22 @@ public class WTTCustomLootspawnService(
         }
 
         // Load general custom spawns
-        var generalPath = ConfigHelper.LoadJsonFile("customSpawnpoints.json", finalDir);
+        var generalPath = configHelper.LoadJsonFile("customSpawnpoints.json", finalDir);
         if (File.Exists(generalPath))
         {
             var generalJson = File.ReadAllText(generalPath);
             var generalSpawns = jsonUtil.Deserialize<Dictionary<string, List<Spawnpoint>>>(generalJson);
-            if (generalSpawns != null) ProcessSpawnpoints(database.Locations, generalSpawns);
+            if (generalSpawns != null) ProcessSpawnPoints(database.Locations, generalSpawns);
         }
     }
-
-    private void ProcessSpawnpoints(
+    
+    private void ProcessSpawnPoints(
         Locations locations,
         Dictionary<string, List<Spawnpoint>> customMap)
     {
-        foreach (var kvp in customMap)
+        foreach (var (map, spawnPoints) in customMap)
         {
-            string locationId = locations.GetMappedKey(kvp.Key);
+            string locationId = locations.GetMappedKey(map);
             var locationMap = locations.GetDictionary();
             if (!locationMap.TryGetValue(locationId, out var location)) continue;
             if (location.LooseLoot == null) continue;
@@ -85,9 +86,8 @@ public class WTTCustomLootspawnService(
             var looseLoot = location.LooseLoot.Value;
             
             var existingSpawns = looseLoot?.Spawnpoints?.ToList() ?? new List<Spawnpoint>();
-            var customSpawns = kvp.Value;
 
-            foreach (var customSpawn in customSpawns)
+            foreach (var customSpawn in spawnPoints)
             {
                 var existing = existingSpawns
                     .FirstOrDefault(sp => sp.LocationId == customSpawn.LocationId);

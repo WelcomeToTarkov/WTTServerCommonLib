@@ -1,20 +1,22 @@
-﻿using SPTarkov.Server.Core.Models.Enums;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+using SPTarkov.Server.Core.Models.Utils;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class GeneratorFuelHelper
+[Injectable]
+public class GeneratorFuelHelper(ISptLogger<GeneratorFuelHelper> logger)
 {
-    public static void AddGeneratorFuel(CustomItemConfig itemConfig, string itemId, DatabaseTables database)
+    public void AddGeneratorFuel(CustomItemConfig itemConfig, string itemId, DatabaseTables database)
     {
         var generator = database.Hideout.Areas.Find(a => a.Id == "5d3b396e33c48f02b81cd9f3");
         var validStages = itemConfig.GeneratorFuelSlotStages;
 
         if (generator == null)
         {
-            Log.Error("Generator not found in hideout areas.");
+            logger.Error("Generator not found in hideout areas.");
             return;
         }
 
@@ -26,7 +28,7 @@ public static class GeneratorFuelHelper
                     {
                         if (stage.Key != validStage)
                         {
-                            Log.Error($"Stage {validStage} not found in generator fuel.");
+                            logger.Error($"Stage {validStage} not found in generator fuel.");
                             break;
                         }
 
@@ -38,7 +40,7 @@ public static class GeneratorFuelHelper
                                 if (filter.Contains(itemId)) continue;
 
                                 filter.Add(itemId);
-                                Log.Info(
+                                logger.Info(
                                     $"[GeneratorFuel] Added item {itemId} as fuel to generator at stage with bonus ID {bonus.Id}");
                             }
                     }

@@ -1,12 +1,14 @@
-﻿using SPTarkov.Server.Core.Models.Eft.Common;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+using SPTarkov.Server.Core.Models.Utils;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class MasteryHelper
+[Injectable]
+public class MasteryHelper(ISptLogger<MasteryHelper> logger)
 {
-    public static void AddOrUpdateMasteries(
+    public void AddOrUpdateMasteries(
         IEnumerable<Mastering> masterySections,
         string itemId,
         DatabaseTables database
@@ -15,7 +17,7 @@ public static class MasteryHelper
         var masteries = masterySections.ToList();
         if (!masteries.Any())
         {
-            Log.Warn( $"No mastery sections defined for item {itemId}");
+            logger.Warning( $"No mastery sections defined for item {itemId}");
             return;
         }
 
@@ -23,7 +25,7 @@ public static class MasteryHelper
         {
             if (string.IsNullOrEmpty(mastery.Name))
             {
-                Log.Error( "Mastery section has no name, skipping.");
+                logger.Error( "Mastery section has no name, skipping.");
                 continue;
             }
 
@@ -38,14 +40,14 @@ public static class MasteryHelper
                 {
                     if (string.IsNullOrEmpty(template))
                     {
-                        Log.Warn( "Invalid template in mastery section, skipping.");
+                        logger.Warning("Invalid template in mastery section, skipping.");
                         continue;
                     }
 
                     if (!templates.Contains(template))
                     {
                         templates.Add(template);
-                        Log.Warn( $"Added template {template} to mastery '{mastery.Name}'");
+                        logger.Warning($"Added template {template} to mastery '{mastery.Name}'");
                     }
                 }
 

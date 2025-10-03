@@ -1,15 +1,17 @@
 ﻿using System.Reflection;
-using SPTarkov.Server.Core.Models.Eft.Common; 
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Constants;
+using SPTarkov.Server.Core.Models.Utils;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 
-namespace WTTServerCommonLib.Services.ItemServiceHelpers
+namespace WTTServerCommonLib.Services.ItemServiceHelpers;
+
+[Injectable]
+public class StaticLootHelper(ISptLogger<StaticLootHelper> logger)
 {
-public static class StaticLootHelper
-{
-    public static void ProcessStaticLootContainers(
+    public void ProcessStaticLootContainers(
         CustomItemConfig config,
         string itemId,
         DatabaseTables database)
@@ -22,7 +24,7 @@ public static class StaticLootHelper
             }
     }
 
-    private static void AddToStaticLoot(
+    private void AddToStaticLoot(
         string containerId,
         string itemId,
         int probability,
@@ -31,7 +33,7 @@ public static class StaticLootHelper
         var locationsDict = database.Locations.GetDictionary();
         if (locationsDict.Count == 0)
         {
-            Log.Warn( "[StaticLoot] Locations dictionary was empty.");
+            logger.Warning("[StaticLoot] Locations dictionary was empty.");
             return;
         }
 
@@ -42,10 +44,10 @@ public static class StaticLootHelper
 
             var staticLootDict = location.StaticLoot?.Value;
             var actualContainerId = ItemTplResolver.ResolveId(containerId);
-            
+
             if (staticLootDict == null || !staticLootDict.TryGetValue(actualContainerId, out var containerDetails))
             {
-                Log.Warn( $"[StaticLoot] Loot container '{containerId}' not found in {locationId}");
+                logger.Warning($"[StaticLoot] Loot container '{containerId}' not found in {locationId}");
                 continue;
             }
 
@@ -53,7 +55,7 @@ public static class StaticLootHelper
         }
     }
 
-    private static void AddDistributionToContainer(
+    private void AddDistributionToContainer(
         object containerDetails,
         string itemId,
         int probability,
@@ -66,7 +68,7 @@ public static class StaticLootHelper
 
         if (itemDistProp?.GetValue(containerDetails) is not IEnumerable<ItemDistribution> existing)
         {
-            Log.Warn( $"[StaticLoot] Loot container '{containerId}' in {locationId} has no ItemDistribution list.");
+            logger.Warning($"[StaticLoot] Loot container '{containerId}' in {locationId} has no ItemDistribution list.");
             return;
         }
 
@@ -79,10 +81,5 @@ public static class StaticLootHelper
         });
 
         itemDistProp.SetValue(containerDetails, newList.ToArray());
-
     }
-
-    
-}
-
 }

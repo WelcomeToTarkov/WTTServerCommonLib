@@ -1,10 +1,14 @@
-﻿using SPTarkov.Server.Core.Utils;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Utils;
 
 namespace WTTServerCommonLib.Helpers;
 
-public static class ConfigHelper
+[Injectable]
+public class ConfigHelper(ISptLogger<ConfigHelper> logger)
 {
-    public static string LoadJsonFile(string fileName, string directory)
+    // ReSharper disable once MemberCanBeMadeStatic.Global
+    public string LoadJsonFile(string fileName, string directory)
     {
         var baseName = Path.GetFileNameWithoutExtension(fileName);
         var jsoncPath = Path.Combine(directory, $"{baseName}.jsonc");
@@ -13,7 +17,7 @@ public static class ConfigHelper
         return File.Exists(jsoncPath) ? jsoncPath : jsonPath;
     }
 
-    public static List<T> LoadAllJsonFiles<T>(string directoryPath, JsonUtil jsonUtil)
+    public List<T> LoadAllJsonFiles<T>(string directoryPath, JsonUtil jsonUtil)
     {
         var result = new List<T>();
 
@@ -31,19 +35,19 @@ public static class ConfigHelper
                 if (jsonData != null)
                 {
                     result.Add(jsonData);
-                    Log.Info($"Loaded file: {filePath}");
+                    logger.Info($"Loaded file: {filePath}");
                 }
             }
             catch (Exception ex)
             {
-                Log.Error($"Error loading file {filePath}: {ex.Message}");
+                logger.Error($"Error loading file {filePath}: {ex.Message}");
             }
         }
 
         return result;
     }
     
-    public static Dictionary<string, Dictionary<string, string>> LoadLocalesFromDirectory(string directoryPath, JsonUtil jsonUtil)
+    public Dictionary<string, Dictionary<string, string>> LoadLocalesFromDirectory(string directoryPath, JsonUtil jsonUtil)
     {
         var locales = new Dictionary<string, Dictionary<string, string>>();
 
@@ -64,12 +68,12 @@ public static class ConfigHelper
                 if (data != null)
                 {
                     locales[localeCode] = data;
-                    Log.Info($"Loaded locale file: {filePath}");
+                    logger.Info($"Loaded locale file: {filePath}");
                 }
             }
             catch (Exception ex)
             {
-                Log.Warn($"Failed to parse {filePath}: {ex.Message}");
+                logger.Warning($"Failed to parse {filePath}: {ex.Message}");
             }
         }
 

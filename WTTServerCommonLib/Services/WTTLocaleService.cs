@@ -4,13 +4,20 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Models.Spt.Server;
+using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
 using WTTServerCommonLib.Helpers;
 
 namespace WTTServerCommonLib.Services;
 
 [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 1)]
-public class WTTLocaleService(DatabaseServer databaseServer, ModHelper modHelper, JsonUtil jsonUtil)
+public class WTTLocaleService(
+    ISptLogger<WTTLocaleService> logger, 
+    DatabaseServer databaseServer, 
+    ModHelper modHelper, 
+    JsonUtil jsonUtil,
+    ConfigHelper configHelper
+    )
 {
     private DatabaseTables? _database;
     
@@ -25,11 +32,11 @@ public class WTTLocaleService(DatabaseServer databaseServer, ModHelper modHelper
 
         if (!Directory.Exists(finalDir))
         {
-            Log.Warn($"Locale directory not found: {finalDir}");
+            logger.Warning($"Locale directory not found: {finalDir}");
             return;
         }
 
-        var customLocales = ConfigHelper.LoadLocalesFromDirectory(finalDir, jsonUtil);
+        var customLocales = configHelper.LoadLocalesFromDirectory(finalDir, jsonUtil);
 
         var fallback = customLocales.TryGetValue("en", out var locale) ? locale : new Dictionary<string, string>();
 
@@ -45,7 +52,7 @@ public class WTTLocaleService(DatabaseServer databaseServer, ModHelper modHelper
             }
         }
 
-        Log.Info($"WTTLocaleService: Merged {customLocales.Count} locale files.");
+        logger.Info($"WTTLocaleService: Merged {customLocales.Count} locale files.");
     }
 
 }

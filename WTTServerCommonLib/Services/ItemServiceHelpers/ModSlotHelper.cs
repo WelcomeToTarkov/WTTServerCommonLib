@@ -1,11 +1,13 @@
-﻿using SPTarkov.Server.Core.Models.Spt.Server;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Server;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class ModslotHelper
+[Injectable]
+public class ModSlotHelper
 {
-    public static void ProcessModSlots(
+    public void ProcessModSlots(
         CustomItemConfig itemConfig, 
         string newItemId, 
         DatabaseTables database)

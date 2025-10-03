@@ -4,6 +4,7 @@ using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Utils;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Services;
+using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib;
 public record ModMetadata : AbstractModMetadata
@@ -41,7 +42,6 @@ public class WTTServerCommonLib(
     
     public Task OnLoad()
     {
-        Log.Init(logger);
         return Task.CompletedTask;
     }
 }

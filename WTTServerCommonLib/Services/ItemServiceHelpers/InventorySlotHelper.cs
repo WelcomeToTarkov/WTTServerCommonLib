@@ -1,12 +1,14 @@
-﻿using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Server;
+using SPTarkov.Server.Core.Models.Utils;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class InventorySlotHelper
+[Injectable]
+public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger)
 {
-    public static void ProcessInventorySlots(
+    public void ProcessInventorySlots(
         CustomItemConfig itemConfig,
         string itemId,
         DatabaseTables database)
@@ -41,7 +43,7 @@ public static class InventorySlotHelper
 
                 if (firstFilter.Filter.Add(itemId))
                 {
-                    Log.Info($"[InventorySlots] Added {itemId} to inventory slot '{slot.Name}'");
+                    logger.Info($"[InventorySlots] Added {itemId} to inventory slot '{slot.Name}'");
                 }
             }
         }

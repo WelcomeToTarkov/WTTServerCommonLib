@@ -8,21 +8,25 @@ using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Models.Spt.Server;
+using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Routers;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Utils;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
+using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 using Path = System.IO.Path;
 
 namespace WTTServerCommonLib.Services;
 
 [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public class WTTCustomQuestService(
+    ISptLogger<WTTCustomQuestService> logger,
     DatabaseServer databaseServer,
     ConfigServer cfgServer,
     ImageRouter imageRouter,
     ModHelper modHelper,
+    ConfigHelper configHelper,
     JsonUtil jsonUtil)
 {
     private DatabaseTables _database = null!;
@@ -43,7 +47,7 @@ public class WTTCustomQuestService(
     {
         if (!Directory.Exists(basePath))
         {
-            Log.Warn($"Quest base directory not found: {basePath}");
+            logger.Warning($"Quest base directory not found: {basePath}");
             return;
         }
 
@@ -59,7 +63,7 @@ public class WTTCustomQuestService(
                 }
                 else
                 {
-                    Log.Warn($"Unknown trader key '{traderKey}'");
+                    logger.Warning($"Unknown trader key '{traderKey}'");
                     continue;
                 }
             }
@@ -73,8 +77,8 @@ public class WTTCustomQuestService(
     {
         string traderBasePath = Path.Combine(questsBasePath, traderId);
 
-        var questFiles  = ConfigHelper.LoadAllJsonFiles<Dictionary<string, Quest>>(traderBasePath, jsonUtil);
-        var assortFiles = ConfigHelper.LoadAllJsonFiles<Dictionary<string, Dictionary<string, string>>>(Path.Combine(traderBasePath, "questAssort"), jsonUtil);
+        var questFiles  = configHelper.LoadAllJsonFiles<Dictionary<string, Quest>>(traderBasePath, jsonUtil);
+        var assortFiles = configHelper.LoadAllJsonFiles<Dictionary<string, Dictionary<string, string>>>(Path.Combine(traderBasePath, "questAssort"), jsonUtil);
         var imageFiles  = LoadImageFiles(Path.Combine(traderBasePath, "images"));
 
         ImportQuestData(questFiles, traderId);
@@ -98,7 +102,7 @@ public class WTTCustomQuestService(
     {
         if (!questFiles.Any())
         {
-            Log.Warn($"{traderId}: No quest files found");
+            logger.Warning($"{traderId}: No quest files found");
             return;
         }
 
@@ -112,14 +116,14 @@ public class WTTCustomQuestService(
             }
         }
 
-        Log.Info($"{traderId}: Loaded {questCount} quests");
+        logger.Info($"{traderId}: Loaded {questCount} quests");
     }
 
     private void ImportQuestAssortData(List<Dictionary<string, Dictionary<string, string>>> assortFiles, string traderId)
     {
         if (!assortFiles.Any())
         {
-            Log.Warn($"{traderId}: No quest assort files found");
+            logger.Warning($"{traderId}: No quest assort files found");
             return;
         }
 
@@ -131,7 +135,7 @@ public class WTTCustomQuestService(
                 var trader = _database.Traders.GetValueOrDefault(traderId);
                 if (trader == null)
                 {
-                    Log.Warn($"Trader {traderId} not found in database.");
+                    logger.Warning($"Trader {traderId} not found in database.");
                     continue;
                 }
 
@@ -149,7 +153,7 @@ public class WTTCustomQuestService(
             }
         }
 
-        Log.Info($"{traderId}: Loaded {assortCount} quest assort items");
+        logger.Info($"{traderId}: Loaded {assortCount} quest assort items");
     }
 
     private void ImportLocaleData(string traderId, string questsBasePath)
@@ -157,15 +161,15 @@ public class WTTCustomQuestService(
         string localesPath = Path.Combine(questsBasePath, traderId, "locales");
         if (!Directory.Exists(localesPath))
         {
-            Log.Warn($"{traderId}: No locales directory found");
+            logger.Warning($"{traderId}: No locales directory found");
             return;
         }
 
-        var locales = ConfigHelper.LoadLocalesFromDirectory(localesPath, jsonUtil);
+        var locales = configHelper.LoadLocalesFromDirectory(localesPath, jsonUtil);
     
         if (!locales.Any())
         {
-            Log.Warn($"{traderId}: No locale files found or loaded");
+            logger.Warning($"{traderId}: No locale files found or loaded");
             return;
         }
 
@@ -174,12 +178,20 @@ public class WTTCustomQuestService(
         if (locales.TryGetValue("en", out var englishLocales))
         {
             fallback = englishLocales;
-            Log.Debug($"{traderId}: Using English as fallback locale");
+
+            if (logger.IsLogEnabled(LogLevel.Debug))
+            {
+                logger.Debug($"{traderId}: Using English as fallback locale");
+            }
         }
         else
         {
             fallback = locales.Values.FirstOrDefault() ?? new Dictionary<string, string>();
-            Log.Debug($"{traderId}: Using {locales.Keys.First()} as fallback locale");
+
+            if (logger.IsLogEnabled(LogLevel.Debug))
+            {
+                logger.Debug($"{traderId}: Using {locales.Keys.First()} as fallback locale");
+            }
         }
 
         foreach (var (localeCode, lazyLocale) in _database.Locales.Global)
@@ -203,7 +215,7 @@ public class WTTCustomQuestService(
             }
         }
 
-        Log.Info($"{traderId}: Loaded {locales.Count} locale files (including JSONC)");
+        logger.Info($"{traderId}: Loaded {locales.Count} locale files (including JSONC)");
     }
     private void ImportImageData(List<string> imageFiles, string traderId)
     {
@@ -212,7 +224,7 @@ public class WTTCustomQuestService(
             string imageName = Path.GetFileNameWithoutExtension(imagePath);
             imageRouter.AddRoute($"/files/quest/icon/{imageName}", imagePath);
         }
-        Log.Info($"{traderId}: Loaded {imageFiles.Count} images");
+        logger.Info($"{traderId}: Loaded {imageFiles.Count} images");
     }
 
     private void ImportQuestSideConfig(string questsBasePath)
@@ -238,12 +250,12 @@ public class WTTCustomQuestService(
                     questConfig.BearOnlyQuests.Add(questId);
                 }
 
-                Log.Info("Loaded QuestSideData.json");
+                logger.Info("Loaded QuestSideData.json");
             }
         }
         catch (Exception ex)
         {
-            Log.Error($"Error loading QuestSideData.json: {ex.Message}");
+            logger.Critical("Error loading QuestSideData.json", ex);
         }
     }
 }
