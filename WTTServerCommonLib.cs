@@ -36,7 +36,7 @@ public class WTTServerCommonLib(
     public WTTCustomLootspawnService CustomLootspawnService { get; } = customLootspawnService;
     public WTTCustomQuestService CustomQuestService { get; } = customQuestService;
     public WTTLocaleService LocaleService { get; } = localeService;
-    public WTTCustomHideoutRecipes HideoutRecipes { get; } = hideoutRecipes;
+    public WTTCustomHideoutRecipes CustomHideoutRecipes { get; } = hideoutRecipes;
     
     
     public Task OnLoad()
