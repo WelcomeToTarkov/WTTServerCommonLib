@@ -107,6 +107,10 @@ namespace WTTServerCommonLib.Models
         [JsonPropertyName("posterSpawnProbability")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? PosterSpawnProbability { get; set; }
+        
+        [JsonPropertyName("addtoStatuetteSlots")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddToStatuetteSlots { get; set; }
 
         public void Validate()
         {
@@ -345,6 +349,11 @@ namespace WTTServerCommonLib.Models
                 {
                     throw new InvalidDataException("PosterSpawnProbability must be >= 0");
                 }
+            }
+
+            if (AddToStatuetteSlots == null)
+            {
+                throw new InvalidDataException("AddToStatuetteSlots is required and must true or false");
             }
         }
 
