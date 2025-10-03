@@ -99,6 +99,14 @@ namespace WTTServerCommonLib.Models
         [JsonPropertyName("addtoHideoutPosterSlots")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? AddToHideoutPosterSlots { get; set; }
+        
+        [JsonPropertyName("addPosterToMaps")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddPosterToMaps { get; set; }
+        
+        [JsonPropertyName("posterSpawnProbability")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? PosterSpawnProbability { get; set; }
 
         public void Validate()
         {
@@ -324,6 +332,19 @@ namespace WTTServerCommonLib.Models
             if (AddToHideoutPosterSlots == null)
             {
                 throw new InvalidDataException("AddToHideoutPosterSlots is required and must true or false");
+            }
+
+            if (AddPosterToMaps == null)
+            {
+                throw new InvalidDataException("AddPosterToMaps is required and must true or false");
+            }
+            
+            if (PosterSpawnProbability != null)
+            {
+                if (PosterSpawnProbability < 0)
+                {
+                    throw new InvalidDataException("PosterSpawnProbability must be >= 0");
+                }
             }
         }
 

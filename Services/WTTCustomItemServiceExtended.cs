@@ -178,6 +178,9 @@ public class WTTCustomItemServiceExtended(
         
         if (config.AddToHideoutPosterSlots == true)
             HideoutPosterHelper.AddToPosterSlot(newItemId, _database);
+        
+        if (config is { AddPosterToMaps: true, PosterSpawnProbability: not null} )
+            PosterLootHelper.ProcessPosterLoot(config, newItemId, _database);
     }
     private void AddDeferredModSlot(string newItemId, CustomItemConfig config)
     {
