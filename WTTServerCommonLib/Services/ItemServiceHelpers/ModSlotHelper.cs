@@ -1,14 +1,16 @@
-﻿using SPTarkov.Server.Core.Models.Spt.Server;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Server;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class ModslotHelper
+[Injectable]
+public class ModSlotHelper(ISptLogger<ModSlotHelper> logger, DatabaseService databaseService)
 {
-    public static void ProcessModSlots(
-        CustomItemConfig itemConfig, 
-        string newItemId, 
-        DatabaseTables database)
+    public void ProcessModSlots(CustomItemConfig itemConfig, string newItemId)
     {
 
         string itemTplToClone = itemConfig.ItemTplToClone;
@@ -19,7 +21,8 @@ public static class ModslotHelper
             .Select(slot => slot.ToLower())
             .ToList();
 
-        foreach (var (_, parentTemplate) in database.Templates.Items)
+        var items = databaseService.GetItems();
+        foreach (var (_, parentTemplate) in items)
         {
             if (parentTemplate.Properties?.Slots == null)
                 continue;

@@ -1,13 +1,19 @@
-﻿using SPTarkov.Server.Core.Models.Common;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
+using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class HideoutPosterHelper
+[Injectable]
+public class HideoutPosterHelper(ISptLogger<HideoutPosterHelper> logger, DatabaseService databaseService)
 {
-    private static readonly string CustomizationItem = "673c7b00cbf4b984b5099181";
+    private const string CustomizationItem = "673c7b00cbf4b984b5099181";
+
     private static readonly string?[] PosterSlotIds =
     [
         "Poster_Security_1", "Poster_Security_2", "Poster_Generator_1", "Poster_Generator_2", "Poster_ScavCase_1",
@@ -18,18 +24,19 @@ public static class HideoutPosterHelper
         "Poster_Gym_5", "Poster_Gym_6", "Poster_Security_3", "Poster_ShootingRange_2"
     ];
 
-    public static void AddToPosterSlot(string itemId, DatabaseTables database)
+    public void AddToPosterSlot(string itemId)
     {
+        var items = databaseService.GetItems();
         foreach (var posterSlotId in PosterSlotIds)
         {
-            if (!database.Templates.Items.TryGetValue(CustomizationItem, out var posterParent) || posterParent.Properties?.Slots == null)
+            if (!items.TryGetValue(CustomizationItem, out var posterParent) || posterParent.Properties?.Slots == null)
                 continue;
 
             AddItemToPosterSlots(itemId, posterParent, posterSlotId);
         }
     }
 
-    private static void AddItemToPosterSlots(string itemId, TemplateItem posterItem, string? posterSlotId)
+    private void AddItemToPosterSlots(string itemId, TemplateItem posterItem, string? posterSlotId)
     {
         foreach (var slot in posterItem.Properties?.Slots)
         {
@@ -44,16 +51,17 @@ public static class HideoutPosterHelper
         }
     }
 
-    private static void AddItemToFilters(string itemId, Slot slot, string? slotName)
+    private void AddItemToFilters(string itemId, Slot slot, string? slotName)
     {
         foreach (var filter in slot.Properties?.Filters)
         {
             filter.Filter ??= new HashSet<MongoId>();
 
             if (filter.Filter.Add(itemId))
-                Log.Info($"[Poster] Added {itemId} to slot '{slot.Name}' in {slotName}");
+                logger.Info($"[Poster] Added {itemId} to slot '{slot.Name}' in {slotName}");
             else
-                Log.Debug($"[Poster] {itemId} already in slot '{slot.Name}'");
+                if (logger.IsLogEnabled(LogLevel.Debug))
+                    logger.Debug($"[Poster] {itemId} already in slot '{slot.Name}'");
         }
     }
 

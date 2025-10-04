@@ -1,21 +1,23 @@
-﻿using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class InventorySlotHelper
+[Injectable]
+public class InventorySlotHelper(ISptLogger<InventorySlotHelper> logger, DatabaseService databaseService)
 {
-    public static void ProcessInventorySlots(
-        CustomItemConfig itemConfig,
-        string itemId,
-        DatabaseTables database)
+    public void ProcessInventorySlots(CustomItemConfig itemConfig, string itemId)
     {
         if (itemConfig.AddToInventorySlots == null)
             return;
 
         const string pmcInventoryTemplateId = "55d7217a4bdc2d86028b456d";
-        var defaultInventorySlots = database.Templates.Items[pmcInventoryTemplateId].Properties?.Slots;
+        
+        var items = databaseService.GetItems();
+        var defaultInventorySlots = items[pmcInventoryTemplateId].Properties?.Slots;
         if (defaultInventorySlots == null)
             return;
 
@@ -41,7 +43,7 @@ public static class InventorySlotHelper
 
                 if (firstFilter.Filter.Add(itemId))
                 {
-                    Log.Info($"[InventorySlots] Added {itemId} to inventory slot '{slot.Name}'");
+                    logger.Info($"[InventorySlots] Added {itemId} to inventory slot '{slot.Name}'");
                 }
             }
         }

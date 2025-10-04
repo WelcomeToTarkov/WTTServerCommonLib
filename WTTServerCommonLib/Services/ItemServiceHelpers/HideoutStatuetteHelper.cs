@@ -1,13 +1,18 @@
-﻿using SPTarkov.Server.Core.Models.Common;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class HideoutStatuetteHelper
+[Injectable]
+public class HideoutStatuetteHelper(ISptLogger<HideoutStatuetteHelper> logger, DatabaseService databaseService)
 {
-    private static readonly string CustomizationItem = "673c7b00cbf4b984b5099181";
+    private const string CustomizationItem = "673c7b00cbf4b984b5099181";
+
     private static readonly string?[] StatuetteSlotIds =
     [
         "Statuette_Gym_1", "Statuette_PlaceOfFame_1", "Statuette_PlaceOfFame_2",
@@ -18,18 +23,19 @@ public static class HideoutStatuetteHelper
         "Statuette_Workbench_1", "Statuette_IntelligenceCenter_1", "Statuette_ShootingRange_1"
     ];
 
-    public static void AddToStatuetteSlot(string itemId, DatabaseTables database)
+    public void AddToStatuetteSlot(string itemId)
     {
+        var items = databaseService.GetItems();
         foreach (var statuetteSlotId in StatuetteSlotIds)
         {
-            if (!database.Templates.Items.TryGetValue(CustomizationItem, out var statuetteParent) || statuetteParent.Properties?.Slots == null)
+            if (!items.TryGetValue(CustomizationItem, out var statuetteParent) || statuetteParent.Properties?.Slots == null)
                 continue;
 
             AddItemToStatuetteSlots(itemId, statuetteParent, statuetteSlotId);
         }
     }
 
-    private static void AddItemToStatuetteSlots(string itemId, TemplateItem statuetteItem, string? statuetteSlotId)
+    private void AddItemToStatuetteSlots(string itemId, TemplateItem statuetteItem, string? statuetteSlotId)
     {
         foreach (var slot in statuetteItem.Properties?.Slots)
         {
@@ -44,20 +50,20 @@ public static class HideoutStatuetteHelper
         }
     }
 
-    private static void AddItemToFilters(string itemId, Slot slot, string? slotName)
+    private void AddItemToFilters(string itemId, Slot slot, string? slotName)
     {
         foreach (var filter in slot.Properties?.Filters)
         {
             filter.Filter ??= new HashSet<MongoId>();
 
             if (filter.Filter.Add(itemId))
-                Log.Info($"[Statuette] Added {itemId} to slot '{slot.Name}' in {slotName}");
+                logger.Info($"[Statuette] Added {itemId} to slot '{slot.Name}' in {slotName}");
             else
-                Log.Debug($"[Statuette] {itemId} already in slot '{slot.Name}'");
+                logger.Debug($"[Statuette] {itemId} already in slot '{slot.Name}'");
         }
     }
 
-    private static string? GetMatchingSlotType(string slotName)
+    private string? GetMatchingSlotType(string slotName)
     {
         foreach (var type in StatuetteSlotIds)
         {

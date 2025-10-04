@@ -1,12 +1,17 @@
-﻿using SPTarkov.Server.Core.Models.Common;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
+using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class HallOfFameHelper
+[Injectable]
+public class HallOfFameHelper(ISptLogger<HallOfFameHelper> logger, DatabaseService databaseService)
 {
     private static readonly string[] ValidTypes = ["dogtag", "smallTrophies", "bigTrophies"];
     private static readonly string[] HallItemIds =
@@ -16,25 +21,26 @@ public static class HallOfFameHelper
         "6542435ea57eea37ed6562f0"  // Level 3
     ];
 
-    public static void AddToHallOfFame(CustomItemConfig itemConfig, string itemId, DatabaseTables database)
+    public void AddToHallOfFame(CustomItemConfig itemConfig, string itemId)
     {
         var filterTypes = GetValidFilterTypes(itemConfig);
         if (filterTypes.Count == 0)
         {
-            Log.Warn($"[HallOfFame] No valid slot types for {itemId}");
+            logger.Warning($"[HallOfFame] No valid slot types for {itemId}");
             return;
         }
 
+        var items = databaseService.GetItems();
         foreach (var hallId in HallItemIds)
         {
-            if (!database.Templates.Items.TryGetValue(hallId, out var hallItem) || hallItem.Properties?.Slots == null)
+            if (!items.TryGetValue(hallId, out var hallItem) || hallItem.Properties?.Slots == null)
                 continue;
 
             AddItemToHallSlots(itemId, hallItem, filterTypes);
         }
     }
 
-    private static HashSet<string> GetValidFilterTypes(CustomItemConfig config)
+    private HashSet<string> GetValidFilterTypes(CustomItemConfig config)
     {
         var types = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -61,7 +67,7 @@ public static class HallOfFameHelper
         return types;
     }
 
-    private static void AddItemToHallSlots(string itemId, TemplateItem hallItem, HashSet<string> filterTypes)
+    private void AddItemToHallSlots(string itemId, TemplateItem hallItem, HashSet<string> filterTypes)
     {
         foreach (var slot in hallItem.Properties.Slots)
         {
@@ -76,7 +82,7 @@ public static class HallOfFameHelper
         }
     }
 
-    private static string GetMatchingSlotType(string slotName)
+    private string GetMatchingSlotType(string slotName)
     {
         foreach (var type in ValidTypes)
         {
@@ -86,16 +92,17 @@ public static class HallOfFameHelper
         return null;
     }
 
-    private static void AddItemToFilters(string itemId, Slot slot, string? hallName)
+    private void AddItemToFilters(string itemId, Slot slot, string? hallName)
     {
         foreach (var filter in slot.Properties.Filters)
         {
             filter.Filter ??= new HashSet<MongoId>();
 
             if (filter.Filter.Add(itemId))
-                Log.Info($"[HallOfFame] Added {itemId} to slot '{slot.Name}' in {hallName}");
+                logger.Info($"[HallOfFame] Added {itemId} to slot '{slot.Name}' in {hallName}");
             else
-                Log.Debug($"[HallOfFame] {itemId} already in slot '{slot.Name}'");
+                if (logger.IsLogEnabled(LogLevel.Debug))
+                    logger.Debug($"[HallOfFame] {itemId} already in slot '{slot.Name}'");
         }
     }
 }

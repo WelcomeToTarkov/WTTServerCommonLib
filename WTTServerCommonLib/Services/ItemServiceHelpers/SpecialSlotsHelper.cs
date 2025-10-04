@@ -1,12 +1,15 @@
-﻿using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Spt.Server;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Services;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class SpecialSlotsHelper
+[Injectable]
+public class SpecialSlotsHelper(ISptLogger<SpecialSlotsHelper> logger, DatabaseService databaseService)
 {
-    public static void AddToSpecialSlots(CustomItemConfig itemConfig, string itemId, DatabaseTables database)
+    public void AddToSpecialSlots(CustomItemConfig itemConfig, string itemId)
     {
         if (itemConfig.AddToSpecialSlots != true)
         {
@@ -19,17 +22,18 @@ public static class SpecialSlotsHelper
             "65e080be269cbd5c5005e529"  // unheard pockets
         };
 
+        var items = databaseService.GetItems();
         foreach (var pocketsId in pocketIds)
         {
-            if (!database.Templates.Items.TryGetValue(pocketsId, out var pockets))
+            if (!items.TryGetValue(pocketsId, out var pockets))
             {
-                Log.Warn( $"[SpecialSlots] Could not find pockets template with id {pocketsId}");
+                logger.Warning( $"[SpecialSlots] Could not find pockets template with id {pocketsId}");
                 continue;
             }
 
             if (pockets.Properties?.Slots == null)
             {
-                Log.Warn( $"[SpecialSlots] Pockets template {pocketsId} has no slots.");
+                logger.Warning( $"[SpecialSlots] Pockets template {pocketsId} has no slots.");
                 continue;
             }
 

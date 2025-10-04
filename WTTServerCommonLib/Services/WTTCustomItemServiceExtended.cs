@@ -4,6 +4,7 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Server;
+using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Services.Mod;
 using SPTarkov.Server.Core.Utils;
@@ -11,16 +12,31 @@ using WTTServerCommonLib.Constants;
 using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 using WTTServerCommonLib.Services.ItemServiceHelpers;
+using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 using Path = System.IO.Path;
 
 namespace WTTServerCommonLib.Services;
 
 [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 1)]
 public class WTTCustomItemServiceExtended(
+    ISptLogger<WTTCustomItemServiceExtended> logger,
     CustomItemService customItemService,
     DatabaseServer databaseServer,
     JsonUtil jsonUtil,
-    ModHelper modHelper)
+    ModHelper modHelper,
+    WeaponPresetHelper weaponPresetHelper,
+    TraderItemHelper traderItemHelper,
+    StaticLootHelper staticLootHelper,
+    SpecialSlotsHelper specialSlotsHelper,
+    PosterLootHelper posterLootHelper,
+    ModSlotHelper modSlotHelper,
+    MasteryHelper masteryHelper,
+    InventorySlotHelper inventorySlotHelper,
+    HideoutStatuetteHelper hideoutStatuetteHelper,
+    HideoutPosterHelper  hideoutPosterHelper,
+    HallOfFameHelper hallOfFameHelper,
+    GeneratorFuelHelper  generatorFuelHelper
+    )
 {
     private readonly List<(string newItemId, CustomItemConfig config)> _deferredModSlotConfigs = new();
     private DatabaseTables? _database;
@@ -29,7 +45,6 @@ public class WTTCustomItemServiceExtended(
     {
         try
         {
-
             string assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
             string defaultDir = Path.Combine("db", "Items");
             string finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
@@ -40,7 +55,7 @@ public class WTTCustomItemServiceExtended(
             }
             if (!Directory.Exists(finalDir))
             {
-                Log.Error( $"Config directory not found at {finalDir}");
+                logger.Error( $"Config directory not found at {finalDir}");
                 return;
             }
 
@@ -49,7 +64,7 @@ public class WTTCustomItemServiceExtended(
                 .ToArray();
             if (!jsonFiles.Any())
             {
-                Log.Warn( $"No JSON config files found in {finalDir}");
+                logger.Warning( $"No JSON config files found in {finalDir}");
                 return;
             }
 
@@ -63,15 +78,15 @@ public class WTTCustomItemServiceExtended(
                 }
                 catch (Exception ex)
                 {
-                    Log.Error( $"Error processing {Path.GetFileName(filePath)}: {ex.Message}");
+                    logger.Error( $"Error processing {Path.GetFileName(filePath)}: {ex.Message}");
                 }
             }
 
-            Log.Info( $"Created {totalItemsCreated} custom items from {jsonFiles.Length} files");
+            logger.Info( $"Created {totalItemsCreated} custom items from {jsonFiles.Length} files");
         }
         catch (Exception ex)
         {
-            Log.Error( $"Error loading configs: {ex.Message}");
+            logger.Error( $"Error loading configs: {ex.Message}");
         }
     }
 
@@ -86,13 +101,13 @@ public class WTTCustomItemServiceExtended(
         }
         catch (Exception ex)
         {
-            Log.Error( $"Failed deserializing {Path.GetFileName(filePath)}: {ex.Message}");
+            logger.Error( $"Failed deserializing {Path.GetFileName(filePath)}: {ex.Message}");
             return 0;
         }
 
         if (config == null)
         {
-            Log.Warn( $"No valid items found in {Path.GetFileName(filePath)}");
+            logger.Warning( $"No valid items found in {Path.GetFileName(filePath)}");
             return 0;
         }
 
@@ -124,7 +139,7 @@ public class WTTCustomItemServiceExtended(
             };
 
             customItemService.CreateItemFromClone(itemDetails);
-            Log.Info( $"Created item {newItemId}");
+            logger.Info( $"Created item {newItemId}");
 
             ProcessAdditionalProperties(newItemId, config);
 
@@ -132,7 +147,7 @@ public class WTTCustomItemServiceExtended(
         }
         catch (Exception ex)
         {
-            Log.Error( $"Failed to create item {newItemId}: {ex.Message}");
+            logger.Error( $"Failed to create item {newItemId}: {ex.Message}");
             return false;
         }
     }
@@ -144,28 +159,28 @@ public class WTTCustomItemServiceExtended(
             return;
         }
         if (config is { AddToTraders: true, Traders: not null })
-            TraderItemHelper.AddItem(config, newItemId, _database);
+            traderItemHelper.AddItem(config, newItemId);
 
         if (config.AddWeaponPreset == true)
-            WeaponPresetHelper.ProcessWeaponPresets(config, newItemId, _database);
+            weaponPresetHelper.ProcessWeaponPresets(config, newItemId);
 
         if (config is { Masteries: true, MasterySections: not null })
-            MasteryHelper.AddOrUpdateMasteries(config.MasterySections, newItemId, _database);
+            masteryHelper.AddOrUpdateMasteries(config.MasterySections, newItemId);
 
         if (config.AddToModSlots == true)
             AddDeferredModSlot(newItemId, config);
 
         if (config.AddToInventorySlots != null)
-            InventorySlotHelper.ProcessInventorySlots(config, newItemId, _database);
+            inventorySlotHelper.ProcessInventorySlots(config, newItemId);
 
         if (config.AddToHallOfFame == true)
-            HallOfFameHelper.AddToHallOfFame(config, newItemId, _database);
+            hallOfFameHelper.AddToHallOfFame(config, newItemId);
 
         if (config.AddToSpecialSlots == true)
-            SpecialSlotsHelper.AddToSpecialSlots(config, newItemId, _database);
+            specialSlotsHelper.AddToSpecialSlots(config, newItemId);
 
         if (config is { AddToStaticLootContainers: true, StaticLootContainers: not null })
-            StaticLootHelper.ProcessStaticLootContainers(config, newItemId, _database);
+            staticLootHelper.ProcessStaticLootContainers(config, newItemId);
 
         if (config.AddToBots == true)
         {
@@ -173,22 +188,22 @@ public class WTTCustomItemServiceExtended(
         }
         
         if (config is { AddToGeneratorAsFuel: true, GeneratorFuelSlotStages: not null })
-            GeneratorFuelHelper.AddGeneratorFuel(config, newItemId, _database);
+            generatorFuelHelper.AddGeneratorFuel(config, newItemId);
         
         if (config.AddToHideoutPosterSlots == true)
-            HideoutPosterHelper.AddToPosterSlot(newItemId, _database);
-        
-        if (config is { AddPosterToMaps: true, PosterSpawnProbability: not null} )
-            PosterLootHelper.ProcessPosterLoot(config, newItemId, _database);
-        
+            hideoutPosterHelper.AddToPosterSlot(newItemId);
+
+        if (config is { AddPosterToMaps: true, PosterSpawnProbability: not null })
+            posterLootHelper.ProcessPosterLoot(config, newItemId);
+
         if (config.AddToStatuetteSlots == true)
-            HideoutStatuetteHelper.AddToStatuetteSlot(newItemId, _database);
+            hideoutStatuetteHelper.AddToStatuetteSlot(newItemId);
     }
     private void AddDeferredModSlot(string newItemId, CustomItemConfig config)
     {
         if (_deferredModSlotConfigs.Any(d => d.newItemId == newItemId))
         {
-            Log.Warn( $"Deferred modslot for {newItemId} already exists, skipping.");
+            logger.Warning( $"Deferred modslot for {newItemId} already exists, skipping.");
             return;
         }
         _deferredModSlotConfigs.Add((newItemId, config));
@@ -197,11 +212,11 @@ public class WTTCustomItemServiceExtended(
     {
         if (_deferredModSlotConfigs.Count == 0)
         {
-            Log.Info( "No deferred modslots to process");
+            logger.Info( "No deferred modslots to process");
             return;
         }
 
-        Log.Info( $"Processing {_deferredModSlotConfigs.Count} deferred modslots...");
+        logger.Info( $"Processing {_deferredModSlotConfigs.Count} deferred modslots...");
 
         foreach (var (newItemId, config) in _deferredModSlotConfigs)
         {
@@ -211,17 +226,21 @@ public class WTTCustomItemServiceExtended(
                 {
                     return;
                 }
-                ModslotHelper.ProcessModSlots(config, newItemId, _database);
-                Log.Debug( $"Processed modslots for {newItemId}");
+                modSlotHelper.ProcessModSlots(config, newItemId);
+
+                if (logger.IsLogEnabled(LogLevel.Debug))
+                {
+                    logger.Debug($"Processed modslots for {newItemId}");
+                }
             }
             catch (Exception ex)
             {
-                Log.Error( $"Failed processing modslots for {newItemId}: {ex.Message}");
+                logger.Critical( $"Failed processing modslots for {newItemId}", ex);
             }
         }
 
         _deferredModSlotConfigs.Clear();
         
-        Log.Info( "Finished processing deferred modslots");
+        logger.Info( "Finished processing deferred modslots");
     }
 }

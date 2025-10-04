@@ -1,33 +1,32 @@
-﻿using SPTarkov.Server.Core.Models.Eft.Common;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using WTTServerCommonLib.Helpers;
+﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Eft.Common;
+using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Services;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
 
-public static class MasteryHelper
+[Injectable]
+public class MasteryHelper(ISptLogger<MasteryHelper> logger, DatabaseService databaseService)
 {
-    public static void AddOrUpdateMasteries(
-        IEnumerable<Mastering> masterySections,
-        string itemId,
-        DatabaseTables database
-        )
+    public void AddOrUpdateMasteries(IEnumerable<Mastering> masterySections, string itemId)
     {
         var masteries = masterySections.ToList();
         if (!masteries.Any())
         {
-            Log.Warn( $"No mastery sections defined for item {itemId}");
+            logger.Warning( $"No mastery sections defined for item {itemId}");
             return;
         }
 
+        var globals = databaseService.GetGlobals();
         foreach (var mastery in masteries)
         {
             if (string.IsNullOrEmpty(mastery.Name))
             {
-                Log.Error( "Mastery section has no name, skipping.");
+                logger.Error( "Mastery section has no name, skipping.");
                 continue;
             }
 
-            var existing = database.Globals.Configuration.Mastering
+            var existing = globals.Configuration.Mastering
                 .FirstOrDefault(m => m.Name.Equals(mastery.Name, StringComparison.OrdinalIgnoreCase));
 
             if (existing != null)
@@ -38,14 +37,14 @@ public static class MasteryHelper
                 {
                     if (string.IsNullOrEmpty(template))
                     {
-                        Log.Warn( "Invalid template in mastery section, skipping.");
+                        logger.Warning("Invalid template in mastery section, skipping.");
                         continue;
                     }
 
                     if (!templates.Contains(template))
                     {
                         templates.Add(template);
-                        Log.Warn( $"Added template {template} to mastery '{mastery.Name}'");
+                        logger.Warning($"Added template {template} to mastery '{mastery.Name}'");
                     }
                 }
 
@@ -62,9 +61,9 @@ public static class MasteryHelper
                     Templates = mastery.Templates.ToArray()
                 };
 
-                var newMastering = database.Globals.Configuration.Mastering.ToList();
+                var newMastering = globals.Configuration.Mastering.ToList();
                 newMastering.Add(newMastery);
-                database.Globals.Configuration.Mastering = newMastering.ToArray();
+                globals.Configuration.Mastering = newMastering.ToArray();
 
                 //Log.Info( $"[Mastery] Created new mastery '{mastery.Name}' for {itemId}");
             }
