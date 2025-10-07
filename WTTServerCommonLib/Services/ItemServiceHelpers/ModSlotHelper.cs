@@ -1,8 +1,10 @@
 ﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Services;
+using WTTServerCommonLib.Helpers;
 using WTTServerCommonLib.Models;
 
 namespace WTTServerCommonLib.Services.ItemServiceHelpers;
@@ -14,6 +16,7 @@ public class ModSlotHelper(ISptLogger<ModSlotHelper> logger, DatabaseService dat
     {
 
         string itemTplToClone = itemConfig.ItemTplToClone;
+        MongoId finalTplToClone = ItemTplResolver.ResolveId(itemTplToClone);
         if (itemConfig.AddToModSlots != true || itemConfig.ModSlot == null || itemConfig.ModSlot.Count == 0)
             return;
 
@@ -37,7 +40,7 @@ public class ModSlotHelper(ISptLogger<ModSlotHelper> logger, DatabaseService dat
                 if (slotFilter?.Filter == null)
                     continue;
 
-                if (slotFilter.Filter.Contains(itemTplToClone) && 
+                if (slotFilter.Filter.Contains(finalTplToClone) && 
                     slotFilter.Filter.Add(newItemId))
                 {
                     //Log.Info($"[ModSlots] Added {newItemId} to slot '{slot.Name}' for parent template {parentTemplateId}");

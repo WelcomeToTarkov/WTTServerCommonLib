@@ -318,43 +318,6 @@ namespace WTTServerCommonLib.Models
                 }
             }
 
-            if (GeneratorFuelSlotStages != null)
-            {
-                if (GeneratorFuelSlotStages.Count == 0)
-                    throw new InvalidDataException("generatorFuelSlotStages was provided but is empty");
-                
-                for (var i = 0; i <  GeneratorFuelSlotStages.Count; i++)
-                {
-                    if (string.IsNullOrWhiteSpace(GeneratorFuelSlotStages[i]))
-                        throw new InvalidDataException($"generatorFuelSlotStages[{i}] is null");
-                    
-                    if (!(GeneratorFuelSlotStages[i]?.Any(char.IsDigit) ?? false)) 
-                        throw new InvalidDataException($"generatorFuelSlotStages[{i}] must contain a number");
-                }
-            }
-
-            if (AddToHideoutPosterSlots == null)
-            {
-                throw new InvalidDataException("AddToHideoutPosterSlots is required and must true or false");
-            }
-
-            if (AddPosterToMaps == null)
-            {
-                throw new InvalidDataException("AddPosterToMaps is required and must true or false");
-            }
-            
-            if (PosterSpawnProbability != null)
-            {
-                if (PosterSpawnProbability < 0)
-                {
-                    throw new InvalidDataException("PosterSpawnProbability must be >= 0");
-                }
-            }
-
-            if (AddToStatuetteSlots == null)
-            {
-                throw new InvalidDataException("AddToStatuetteSlots is required and must true or false");
-            }
         }
 
     }

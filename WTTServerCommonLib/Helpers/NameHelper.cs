@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Models.Common;
 
 namespace WTTServerCommonLib.Helpers;
@@ -6,8 +7,8 @@ namespace WTTServerCommonLib.Helpers;
 
 public static class ItemTplResolver
 {
-    private static readonly Dictionary<string, MongoId> _cache = new Dictionary<string, MongoId>(StringComparer.OrdinalIgnoreCase);
-    private static bool _isInitialized = false;
+    private static readonly Dictionary<string, MongoId> Cache = new Dictionary<string, MongoId>(StringComparer.OrdinalIgnoreCase);
+    private static bool _isInitialized;
 
     static ItemTplResolver()
     {
@@ -17,22 +18,31 @@ public static class ItemTplResolver
     private static void InitializeCache()
     {
         if (_isInitialized) return;
-        
+    
         var fields = typeof(ItemTpl).GetFields(BindingFlags.Public | BindingFlags.Static);
         foreach (var field in fields)
         {
             if (field.FieldType == typeof(MongoId))
             {
-                _cache[field.Name] = (MongoId)field.GetValue(null);
+                var value = field.GetValue(null);
+                if (value != null)
+                {
+                    Cache[field.Name] = (MongoId)value;
+                }
             }
         }
-        
+    
         _isInitialized = true;
     }
 
     public static MongoId ResolveId(string itemName)
     {
-        if (_cache.TryGetValue(itemName, out var mongoId))
+
+        if (itemName.IsValidMongoId())
+        {
+            return itemName;
+        }
+        if (Cache.TryGetValue(itemName, out var mongoId))
         {
             return mongoId;
         }
@@ -42,7 +52,7 @@ public static class ItemTplResolver
 
     public static bool TryResolveId(string itemName, out MongoId result)
     {
-        return _cache.TryGetValue(itemName, out result);
+        return Cache.TryGetValue(itemName, out result);
     }
 }
 public static class NameHelper
