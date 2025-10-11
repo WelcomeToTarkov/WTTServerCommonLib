@@ -33,7 +33,7 @@ public class WTTCustomLootspawnService(
         var locations = database.Locations.GetDictionary();
 
         // Load forced spawns
-        var forcedPath = configHelper.LoadJsonFile("customSpawnpointsForced.json", finalDir);
+        var forcedPath = configHelper.LoadJsonFile("CustomSpawnpointsForced.json", finalDir);
         if (File.Exists(forcedPath))
         {
             var forcedJson = File.ReadAllText(forcedPath);
@@ -47,7 +47,6 @@ public class WTTCustomLootspawnService(
                     if (location.LooseLoot == null) continue;
 
                     var looseLoot = location.LooseLoot.Value;
-
                     var existingForced = looseLoot?.SpawnpointsForced?.ToList() ?? new List<Spawnpoint>();
 
                     foreach (var newSpawn in kvp.Value)
@@ -63,7 +62,7 @@ public class WTTCustomLootspawnService(
         }
 
         // Load general custom spawns
-        var generalPath = configHelper.LoadJsonFile("customSpawnpoints.json", finalDir);
+        var generalPath = configHelper.LoadJsonFile("CustomSpawnpoints.json", finalDir);
         if (File.Exists(generalPath))
         {
             var generalJson = File.ReadAllText(generalPath);

@@ -1,4 +1,5 @@
 ﻿using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Services;
@@ -53,7 +54,12 @@ public class StaticLootHelper(DatabaseService databaseService, ISptLogger<Static
 
                 var actualContainerId = ItemTplResolver.ResolveId(containerId);
 
-                if (lazyloadedStaticLootData.TryGetValue(actualContainerId, out var containerDetails))
+                if (!actualContainerId.IsValidMongoId())
+                {
+                    logger.Error("[StaticLoot] Could not resolve container ID");
+                    return lazyloadedStaticLootData;
+                }
+                if (!lazyloadedStaticLootData.TryGetValue(actualContainerId, out var containerDetails))
                 {
                     logger.Warning($"[StaticLoot] Loot container '{containerId}' not found in {locationId}");
                     return lazyloadedStaticLootData;
@@ -73,9 +79,9 @@ public class StaticLootHelper(DatabaseService databaseService, ISptLogger<Static
      string locationId,
      string containerId)
     {
-        if (containerDetails is null || containerDetails.ItemDistribution is null)
+        if (containerDetails is null)
         {
-            logger.Warning($"[StaticLoot] Loot container '{containerId}' in {locationId} has no ItemDistribution list.");
+            logger.Warning($"[StaticLoot] Loot container '{containerId}' in {locationId} is null.");
             return;
         }
 
@@ -88,5 +94,7 @@ public class StaticLootHelper(DatabaseService databaseService, ISptLogger<Static
         });
 
         containerDetails.ItemDistribution = newItemDistribution.ToArray();
+        
+        logger.Info("[StaticLoot] Successfully added item to static loot container!");
     }
 }

@@ -68,7 +68,6 @@ public class PosterLootHelper(DatabaseService databaseService, ISptLogger<Poster
                         logger.Debug($"[PosterLoot] {locationId} + {spawnpoint.LocationId ?? "?"} id={templateId} key={newId}");
                     }
 
-                    // Replace the original with our modified values
                     template.Items = spawnPointItems;
                     spawnpoint.ItemDistribution = itemDistList;
                 }

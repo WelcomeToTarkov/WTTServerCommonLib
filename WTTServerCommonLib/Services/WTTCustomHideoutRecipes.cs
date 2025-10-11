@@ -7,7 +7,6 @@ using SPTarkov.Server.Core.Models.Eft.Hideout;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
-using WTTServerCommonLib.Helpers;
 using LogLevel = SPTarkov.Server.Core.Models.Spt.Logging.LogLevel;
 
 namespace WTTServerCommonLib.Services;
@@ -23,7 +22,7 @@ public class WTTCustomHideoutRecipes(
     public void AddHideoutRecipes(Assembly assembly)
     {
         string assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
-        string defaultDir = Path.Combine("db", "HideoutRecipes");
+        string defaultDir = Path.Combine("db", "CustomHideoutRecipes");
         string finalDir = Path.Combine(assemblyLocation, defaultDir);
             
         if (_database == null)
@@ -32,7 +31,7 @@ public class WTTCustomHideoutRecipes(
         }
         if (!Directory.Exists(finalDir))
         {
-            logger.Error($"[HideoutRecipes] 'db/HideoutRecipes' directory not found at {finalDir}");
+            logger.Error($"'directory not found at {finalDir}");
             return;
         }
         
@@ -49,13 +48,13 @@ public class WTTCustomHideoutRecipes(
             }
             catch (Exception ex)
             {
-                logger.Critical($"[HideoutRecipes] Failed to read {file}", ex);
+                logger.Critical($"Failed to read {file}", ex);
                 continue;
             }
 
             if (!MongoId.IsValidMongoId(recipe.Id))
             {
-                logger.Error($"[HideoutRecipes] Missing Id in {file}");
+                logger.Error($"Missing Id in {file}");
                 continue;
             }
 
@@ -64,14 +63,14 @@ public class WTTCustomHideoutRecipes(
             {
                 if (logger.IsLogEnabled(LogLevel.Debug))
                 {
-                    logger.Debug($"[HideoutRecipes] Recipe {recipe.Id} already exists, skipping");
+                    logger.Debug($"Recipe {recipe.Id} already exists, skipping");
                 }
                 
                 continue;
             }
 
             _database.Hideout.Production.Recipes?.Add(recipe);
-            logger.Info($"[HideoutRecipes] Added hideout recipe {recipe.Id} for item {recipe.EndProduct}");
+            logger.Info($"Added hideout recipe {recipe.Id} for item {recipe.EndProduct}");
         }
     }
 }

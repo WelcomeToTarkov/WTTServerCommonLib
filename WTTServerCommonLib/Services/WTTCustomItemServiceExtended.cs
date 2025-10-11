@@ -46,7 +46,7 @@ public class WTTCustomItemServiceExtended(
         try
         {
             string assemblyLocation = modHelper.GetAbsolutePathToModFolder(assembly);
-            string defaultDir = Path.Combine("db", "Items");
+            string defaultDir = Path.Combine("db", "CustomItems");
             string finalDir = Path.Combine(assemblyLocation, relativePath ?? defaultDir);
             
             if (_database == null)
@@ -55,7 +55,7 @@ public class WTTCustomItemServiceExtended(
             }
             if (!Directory.Exists(finalDir))
             {
-                logger.Error( $"Config directory not found at {finalDir}");
+                logger.Error( $"directory not found at {finalDir}");
                 return;
             }
 

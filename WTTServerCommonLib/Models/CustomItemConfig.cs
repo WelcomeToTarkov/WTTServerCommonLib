@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 
 namespace WTTServerCommonLib.Models
@@ -58,7 +59,7 @@ namespace WTTServerCommonLib.Models
 
         [JsonPropertyName("staticLootContainers")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<StaticLootContainer>? StaticLootContainers { get; set; }
+        public List<ConfigStaticLootContainer>? StaticLootContainers { get; set; }
 
         [JsonPropertyName("masteries")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -111,6 +112,10 @@ namespace WTTServerCommonLib.Models
         [JsonPropertyName("addtoStatuetteSlots")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? AddToStatuetteSlots { get; set; }
+        
+        [JsonPropertyName("addCaliberToAllCloneLocations")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? AddCaliberToAllCloneLocations { get; set; }
 
         public void Validate()
         {
@@ -136,7 +141,7 @@ namespace WTTServerCommonLib.Models
             if (HandbookPriceRoubles < 0)
                 throw new InvalidDataException("handbookPriceRoubles must be >= 0");
             
-            if (Traders != null)
+            if (AddToTraders == true && Traders != null)
             {
                 if (Traders.Count == 0)
                     throw new InvalidDataException("traders was provided but is empty");
@@ -163,13 +168,13 @@ namespace WTTServerCommonLib.Models
                         if (scheme == null)
                             throw new InvalidDataException($"traders['{traderKey}']['{schemeKey}'] is null");
 
-                        if (scheme.BarterSettings == null)
+                        if (scheme.ConfigBarterSettings == null)
                             throw new InvalidDataException($"traders['{traderKey}']['{schemeKey}'].barterSettings is required");
 
-                        if (scheme.BarterSettings.LoyalLevel < 0)
+                        if (scheme.ConfigBarterSettings.LoyalLevel < 0)
                             throw new InvalidDataException($"traders['{traderKey}']['{schemeKey}'].barterSettings.loyalLevel must be >= 0");
 
-                        if (scheme.BarterSettings.StackObjectsCount < 0)
+                        if (scheme.ConfigBarterSettings.StackObjectsCount < 0)
                             throw new InvalidDataException($"traders['{traderKey}']['{schemeKey}'].barterSettings.stackObjectsCount must be >= 0");
 
                         if (scheme.Barters == null || scheme.Barters.Count == 0)
@@ -192,11 +197,8 @@ namespace WTTServerCommonLib.Models
                 }
             }
             
-            if (AddToInventorySlots != null)
+            if (AddToInventorySlots != null && AddToInventorySlots.Count > 0)
             {
-                if (AddToInventorySlots.Count == 0)
-                    throw new InvalidDataException("addtoInventorySlots was provided but is empty");
-
                 for (var i = 0; i < AddToInventorySlots.Count; i++)
                 {
                     if (string.IsNullOrWhiteSpace(AddToInventorySlots[i]))
@@ -228,7 +230,7 @@ namespace WTTServerCommonLib.Models
                 }
             }
             
-            if (StaticLootContainers != null)
+            if (AddToStaticLootContainers == true && StaticLootContainers != null)
             {
                 if (StaticLootContainers.Count == 0)
                     throw new InvalidDataException("staticLootContainers was provided but is empty");
@@ -247,7 +249,7 @@ namespace WTTServerCommonLib.Models
                 }
             }
 
-            if (MasterySections != null)
+            if (Masteries == true && MasterySections != null)
             {
                 if (MasterySections.Count == 0)
                     throw new InvalidDataException("masterySections was provided but is empty");
@@ -269,7 +271,7 @@ namespace WTTServerCommonLib.Models
                 }
             }
 
-            if (WeaponPresets != null)
+            if (AddWeaponPreset == true && WeaponPresets != null)
             {
                 if (WeaponPresets.Count == 0)
                     throw new InvalidDataException("weaponPresets was provided but is empty");
@@ -319,19 +321,18 @@ namespace WTTServerCommonLib.Models
             }
 
         }
-
     }
 
     public class ConfigTraderScheme
     {
         [JsonPropertyName("barterSettings")]
-        public required BarterSettings BarterSettings { get; set; }
+        public required ConfigBarterSettings ConfigBarterSettings { get; set; }
 
         [JsonPropertyName("barters")]
-        public required List<BarterScheme> Barters { get; set; } = new();
+        public required List<ConfigBarterScheme> Barters { get; set; } = new();
     }
 
-    public class BarterSettings
+    public class ConfigBarterSettings
     {
         [JsonPropertyName("loyalLevel")]
         public required int LoyalLevel { get; set; }
@@ -343,7 +344,24 @@ namespace WTTServerCommonLib.Models
         public required int StackObjectsCount { get; set; }
     }
 
-    public class StaticLootContainer
+    public class ConfigBarterScheme()
+    {
+        [JsonPropertyName("count")] public virtual double? Count { get; set; }
+
+        [JsonPropertyName("_tpl")] public virtual string Template { get; set; }
+
+        [JsonPropertyName("onlyFunctional")] public virtual bool? OnlyFunctional { get; set; }
+
+        [JsonPropertyName("sptQuestLocked")] public virtual bool? SptQuestLocked { get; set; }
+
+        [JsonPropertyName("level")] public virtual int? Level { get; set; }
+
+        [JsonPropertyName("side")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public virtual DogtagExchangeSide? Side { get; set; }
+    }
+    
+    public class ConfigStaticLootContainer
     {
         [JsonPropertyName("containerName")]
         public required string ContainerName { get; set; } = string.Empty;
@@ -351,4 +369,7 @@ namespace WTTServerCommonLib.Models
         [JsonPropertyName("probability")]
         public required int Probability { get; set; }
     }
+
+
 }
+

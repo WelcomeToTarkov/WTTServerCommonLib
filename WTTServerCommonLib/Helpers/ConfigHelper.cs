@@ -5,7 +5,7 @@ using SPTarkov.Server.Core.Utils;
 namespace WTTServerCommonLib.Helpers;
 
 [Injectable]
-public class ConfigHelper(ISptLogger<ConfigHelper> logger)
+public class ConfigHelper(ISptLogger<ConfigHelper> logger, JsonUtil jsonUtil)
 {
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string LoadJsonFile(string fileName, string directory)
@@ -17,7 +17,7 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger)
         return File.Exists(jsoncPath) ? jsoncPath : jsonPath;
     }
 
-    public List<T> LoadAllJsonFiles<T>(string directoryPath, JsonUtil jsonUtil)
+    public List<T> LoadAllJsonFiles<T>(string directoryPath)
     {
         var result = new List<T>();
 
@@ -47,11 +47,10 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger)
         return result;
     }
     
-    public Dictionary<string, Dictionary<string, string>> LoadLocalesFromDirectory(string directoryPath, JsonUtil jsonUtil)
+    public Dictionary<string, Dictionary<string, string>> LoadLocalesFromDirectory(string directoryPath)
     {
         var locales = new Dictionary<string, Dictionary<string, string>>();
 
-        // Look for both JSON and JSONC files
         var jsonFiles = Directory.GetFiles(directoryPath, "*.json")
             .Concat(Directory.GetFiles(directoryPath, "*.jsonc"))
             .ToArray();
@@ -62,7 +61,6 @@ public class ConfigHelper(ISptLogger<ConfigHelper> logger)
 
             try
             {
-                // Use JsonUtil which automatically handles JSONC comments
                 var data = jsonUtil.DeserializeFromFile<Dictionary<string, string>>(filePath);
 
                 if (data != null)

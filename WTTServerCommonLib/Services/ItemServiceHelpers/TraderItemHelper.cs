@@ -25,7 +25,7 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseServi
             var traders = databaseService.GetTraders();
             foreach (var (traderKey, schemes) in config.Traders)
             {
-                if (!TraderIds.TraderMap.TryGetValue(traderKey, out var traderId))
+                if (!TraderIds.TraderMap.TryGetValue(traderKey.ToLower(), out var traderId))
                 {
                     logger.Warning($"Unknown trader key '{traderKey}'");
                     continue;
@@ -47,8 +47,8 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseServi
                         SlotId = "hideout",
                         Upd = new Upd
                         {
-                            UnlimitedCount = scheme.BarterSettings.UnlimitedCount,
-                            StackObjectsCount = scheme.BarterSettings.StackObjectsCount
+                            UnlimitedCount = scheme.ConfigBarterSettings.UnlimitedCount,
+                            StackObjectsCount = scheme.ConfigBarterSettings.StackObjectsCount
                         }
                     };
 
@@ -86,7 +86,7 @@ public class TraderItemHelper(ISptLogger<TraderItemHelper> logger, DatabaseServi
                         barterOptions.Add(barterSchemeItems);
                     }
 
-                    trader.Assort.LoyalLevelItems[schemeKey] = scheme.BarterSettings.LoyalLevel;
+                    trader.Assort.LoyalLevelItems[schemeKey] = scheme.ConfigBarterSettings.LoyalLevel;
                 }
             }
         }

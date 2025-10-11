@@ -75,7 +75,7 @@ public class WTTCustomAssortSchemeService(
                 var traderKey = kvp.Key;
                 var newAssort = kvp.Value;
 
-                if (!TraderIds.TraderMap.TryGetValue(traderKey, out var traderId))
+                if (!TraderIds.TraderMap.TryGetValue(traderKey.ToLower(), out var traderId))
                 {
                     logger.Warning($"Unknown trader key '{traderKey}'");
                     continue;
